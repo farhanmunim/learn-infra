@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Infra, explained: a field guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --fg:#09090b; --muted:#71717a; --muted-bg:#f4f4f5; --border:#e4e4e7;
+  --card:#ffffff; --accent:#2563eb; --accent-bg:#eff6ff; --accent-fg:#1e40af;
+  --ok:#16a34a; --ok-bg:#f0fdf4; --warn-bg:#fffbeb; --warn-fg:#92400e;
+  --radius:0.5rem;
+  --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#09090b; --fg:#fafafa; --muted:#a1a1aa; --muted-bg:#18181b; --border:#27272a;
+    --card:#0f0f12; --accent:#60a5fa; --accent-bg:#172554; --accent-fg:#bfdbfe;
+    --ok:#4ade80; --ok-bg:#052e16; --warn-bg:#2a1d05; --warn-fg:#fcd34d;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#09090b; --fg:#fafafa; --muted:#a1a1aa; --muted-bg:#18181b; --border:#27272a;
+  --card:#0f0f12; --accent:#60a5fa; --accent-bg:#172554; --accent-fg:#bfdbfe;
+  --ok:#4ade80; --ok-bg:#052e16; --warn-bg:#2a1d05; --warn-fg:#fcd34d;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100%}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+code{font-family:var(--mono);font-size:.875em;background:var(--muted-bg);border:1px solid var(--border);padding:.05em .35em;border-radius:.3rem}
+pre{font-family:var(--mono);font-size:13px;line-height:1.55;background:var(--muted-bg);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;overflow-x:auto;max-width:100%}
+pre code{background:none;border:0;padding:0;font-size:inherit}
+.tbl{overflow-x:auto;max-width:100%;border:1px solid var(--border);border-radius:var(--radius);margin:1rem 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:.55rem .75rem;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-weight:500;color:var(--muted);background:var(--muted-bg)}
+tr:last-child td{border-bottom:0}
+
+.app{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+.side{border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.25rem 1rem 2rem;background:var(--bg)}
+.brand{display:flex;align-items:center;gap:.6rem;font-weight:600;letter-spacing:-.01em;text-decoration:none;color:var(--fg);margin-bottom:1rem}
+.brand-mark{width:28px;height:28px;border-radius:.4rem;background:var(--fg);color:var(--bg);display:grid;place-items:center;font-family:var(--mono);font-size:13px}
+.search{width:100%;height:36px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--fg);padding:0 .75rem;font:inherit;font-size:14px}
+.progress{margin:1rem 0 .5rem;font-size:13px;color:var(--muted)}
+.bar{height:6px;background:var(--muted-bg);border-radius:99px;overflow:hidden;margin-top:.35rem}
+.bar>span{display:block;height:100%;background:var(--fg);width:0;transition:width .3s}
+.nav-part{margin-top:1.1rem}
+.nav-part>h3{font-size:12px;font-weight:500;color:var(--muted);margin:0 0 .3rem .5rem;letter-spacing:.01em}
+.nav-part ol{list-style:none;margin:0;padding:0}
+.nav-part a{display:flex;gap:.5rem;align-items:baseline;padding:.3rem .5rem;border-radius:.4rem;text-decoration:none;color:var(--fg);font-size:14px;line-height:1.35}
+.nav-part a:hover{background:var(--muted-bg)}
+.nav-part a[aria-current="page"]{background:var(--muted-bg);font-weight:500}
+.nav-part a .dot{flex:none;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--border);transform:translateY(-1px)}
+.nav-part a.done .dot{background:var(--ok);border-color:var(--ok)}
+.nav-empty{font-size:14px;color:var(--muted);padding:.5rem}
+
+.top{display:none;position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--border);padding:.6rem 1rem;padding-top:calc(.6rem + env(safe-area-inset-top,0px));align-items:center;gap:.75rem;margin-top:calc(-1 * env(safe-area-inset-top,0px))}
+.btn{height:36px;padding:0 .9rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--fg);font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem}
+.btn:hover{background:var(--muted-bg)}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn.primary:hover{opacity:.9}
+.btn.is-done{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+
+main{padding:2.5rem clamp(1rem,5vw,4rem) 4rem;min-width:0}
+.content{max-width:44rem}
+.crumb{font-size:13px;color:var(--muted);margin-bottom:.4rem}
+h1{font-size:clamp(2rem,5vw,2.9rem);line-height:1.08;letter-spacing:-.035em;font-weight:600;margin:0 0 1rem}
+h2.ch-title{font-size:clamp(1.6rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.025em;font-weight:600;margin:0 0 .75rem}
+h4{font-size:14px;font-weight:600;margin:0 0 .35rem}
+.lead{font-size:1.125rem;color:var(--muted);margin:0 0 1.5rem;line-height:1.55}
+article.ch{display:none}
+article.ch.show{display:block}
+article.ch ul{padding-left:1.2rem}
+article.ch li{margin:.25rem 0}
+aside{border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;margin:1.25rem 0}
+aside p{margin:0}
+aside p+p{margin-top:.5rem}
+aside.yours{background:var(--accent-bg);border-color:transparent;color:var(--accent-fg)}
+aside.yours code{background:transparent;border-color:currentColor}
+aside.say{background:var(--muted-bg);border-color:transparent}
+aside.say p{font-style:italic}
+aside.warn{background:var(--warn-bg);border-color:transparent;color:var(--warn-fg)}
+.ch-actions{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:space-between;align-items:center;margin-top:2.5rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.ch-actions .nav-btns{display:flex;gap:.5rem}
+
+.journey{list-style:none;padding:0;margin:1.75rem 0 2rem;display:grid;gap:0}
+.journey li{display:grid;grid-template-columns:2.25rem minmax(0,1fr);gap:.9rem;position:relative;padding-bottom:1rem}
+.journey li::before{content:"";position:absolute;left:1.1rem;top:2.25rem;bottom:0;width:1px;background:var(--border)}
+.journey li:last-child::before{display:none}
+.journey .n{width:2.25rem;height:2.25rem;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;font-family:var(--mono);font-size:13px;background:var(--bg);position:relative}
+.journey b{font-weight:600}
+.journey a{font-size:14px}
+.journey p{margin:.1rem 0 0;color:var(--muted);font-size:15px}
+.parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.75rem;margin:1.25rem 0}
+.part-card{border:1px solid var(--border);border-radius:calc(var(--radius) + .25rem);padding:1rem;text-decoration:none;color:var(--fg);display:block}
+.part-card:hover{background:var(--muted-bg)}
+.part-card strong{display:block;font-weight:600}
+.part-card span{font-size:13px;color:var(--muted)}
+.gloss-filter{margin:.5rem 0 1rem}
+dl.gloss{margin:0}
+dl.gloss dt{font-weight:600;margin-top:.9rem}
+dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
+
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .top{display:flex}
+  .side{position:fixed;inset:0 auto 0 0;width:min(86vw,320px);z-index:10;transform:translateX(-100%);transition:transform .2s;height:100%;padding-top:calc(1.25rem + env(safe-area-inset-top,0px));padding-bottom:calc(2rem + env(safe-area-inset-bottom,0px));box-shadow:none}
+  .side.open{transform:none;box-shadow:0 0 0 100vmax rgba(0,0,0,.4)}
+  main{padding-top:1.5rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="side" id="side" aria-label="Chapters">
+  <a class="brand" href="#home"><span class="brand-mark">&gt;_</span>Infra, explained</a>
+  <input class="search" id="search" type="search" placeholder="Search chapters, e.g. ingress" aria-label="Search chapters">
+  <div class="progress"><span id="prog-text">0 of 0 chapters read</span><div class="bar"><span id="prog-bar"></span></div></div>
+  <div id="toc"></div>
+</nav>
+<div>
+<header class="top">
+  <button class="btn" id="menu" aria-controls="side" aria-expanded="false">Chapters</button>
+  <span id="top-title" style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+</header>
+<main id="main">
+<div class="content" id="content">
+
+<section id="home-view">
+  <h1>Infra, explained for people who already build things</h1>
+  <p class="lead">More than seventy short chapters that give you the vocabulary and mental models engineers use when they talk about servers, networks, pipelines and architecture. Each one takes two or three minutes and links back to things you already run.</p>
+  <p>Start with the journey below. Every hop a request makes on its way to your app is a chapter, and once you can narrate this path out loud you can follow most infrastructure conversations.</p>
+  <ol class="journey">
+    <li><span class="n">1</span><div><b>Someone types a domain</b><p>DNS turns the name into an IP address.</p><a href="#dns">DNS and record types</a></div></li>
+    <li><span class="n">2</span><div><b>A secure connection opens</b><p>TLS proves the server is who it claims to be and encrypts the traffic.</p><a href="#tls">HTTPS, TLS and certificates</a></div></li>
+    <li><span class="n">3</span><div><b>The edge answers if it can</b><p>A CDN serves cached copies from a data centre near the visitor.</p><a href="#cdn">CDNs and the edge</a></div></li>
+    <li><span class="n">4</span><div><b>Traffic is spread and routed</b><p>A load balancer and reverse proxy decide which server and which app gets the request.</p><a href="#proxy">Forward and reverse proxies</a></div></li>
+    <li><span class="n">5</span><div><b>Your code runs</b><p>In a container, a VM or a serverless function.</p><a href="#vm-container">VMs versus containers</a></div></li>
+    <li><span class="n">6</span><div><b>Data is fetched</b><p>From a cache if possible, otherwise the database.</p><a href="#caching">Caching and Redis</a></div></li>
+    <li><span class="n">7</span><div><b>Everything is recorded</b><p>Logs, metrics and traces tell you what happened and how fast.</p><a href="#three-pillars">Logs, metrics and traces</a></div></li>
+  </ol>
+  <h2 class="ch-title" style="font-size:1.4rem">The parts</h2>
+  <div class="parts" id="parts"></div>
+  <p style="color:var(--muted);font-size:14px">Your progress is saved in this browser. Mark a chapter as read at the bottom of each page.</p>
+</section>
+
+<!-- PART 1 -->
+<article class="ch" id="layers" data-part="Start here" data-title="Who does what: the layers of a tech team">
+<p class="lead">Most infra confusion is really confusion about which layer someone is talking about.</p>
+<p>Engineers split a system into layers, and job titles follow the same lines:</p>
+<ul>
+<li><b>Frontend</b> is what runs in the browser: HTML, CSS, JavaScript, your Astro site.</li>
+<li><b>Backend</b> is code that runs on a server: APIs, business logic, talking to the database.</li>
+<li><b>Infrastructure</b> ("infra") is what the backend runs on: servers, networks, storage, DNS.</li>
+<li><b>Platform</b> is the tooling that makes infra easy for other developers to use, such as an internal deploy button. Coolify is a platform product.</li>
+<li><b>Operations</b> ("ops") is keeping it all running: monitoring, backups, upgrades, incidents.</li>
+</ul>
+<p>"Architecture" sits across all of these. It is the set of decisions about which pieces exist and how they talk to each other, usually drawn as boxes and arrows.</p>
+<aside class="yours"><h4>In your setup</h4><p>Astro is your frontend, WordPress is your backend (it only serves an API now), Hetzner plus Tailscale plus your NAS is your infrastructure, Coolify is your platform, and Uptime Kuma and your nightly rsync are ops.</p></aside>
+<aside class="say"><h4>Say it like this</h4><p>"Is that a frontend bug or is it infra? The API responds fine, so I think it's the CDN caching an old build."</p></aside>
+</article>
+
+<article class="ch" id="stack-words" data-part="Start here" data-title="Stack, service, environment, instance">
+<p class="lead">Four nouns you'll hear in almost every infra sentence.</p>
+<p>A <b>stack</b> is the set of technologies a product uses. "Our stack is Next.js, Postgres and AWS." People also say "tech stack" or "the stack".</p>
+<p>A <b>service</b> is one running piece of software with a job, usually reachable over the network. Your database is a service, Umami is a service, an email sender might be a service. A system is a set of services.</p>
+<p>An <b>environment</b> is a complete copy of the system for a purpose: <code>dev</code> for building, <code>staging</code> for testing, <code>production</code> (or <code>prod</code>) for real users.</p>
+<p>An <b>instance</b> is one running copy of something. Three instances of a service means three copies running side by side. In the cloud, "instance" also just means a virtual server.</p>
+<aside class="say"><h4>Say it like this</h4><p>"We run two instances of the API service in prod, but only one in staging to save money."</p></aside>
+</article>
+
+<!-- PART 2 -->
+<article class="ch" id="ip-ports" data-part="Networking and DNS" data-title="IP addresses and ports">
+<p class="lead">An IP address finds the machine; a port finds the program on that machine.</p>
+<p>Every device on a network has an <b>IP address</b>. IPv4 looks like <code>203.0.113.10</code>; IPv6 looks like <code>2001:db8::1</code> and exists because the world ran out of IPv4 addresses.</p>
+<p>Addresses are either <b>public</b> (reachable from the internet) or <b>private</b> (only inside a network, such as <code>192.168.x.x</code> at home or <code>10.x.x.x</code> in a data centre).</p>
+<p>A <b>port</b> is a numbered door on a machine. One server can run many programs, each listening on a different port. Common ones: 22 for SSH, 80 for HTTP, 443 for HTTPS, 5432 for Postgres, 6379 for Redis, 3000 or 8080 for app servers in development.</p>
+<p>To "expose" or "open" a port means allowing traffic to reach it. To "bind" a port means a program has claimed it.</p>
+<aside class="yours"><h4>In your setup</h4><p>Your VPS has a public IP where port 22 is blocked by the Hetzner firewall, and a private Tailscale IP where port 22 works. Same machine, same port, different network path.</p></aside>
+<aside class="say"><h4>Say it like this</h4><p>"The container is listening on 3000 but nothing's mapped to it, so it isn't exposed."</p></aside>
+</article>
+
+<article class="ch" id="dns" data-part="Networking and DNS" data-title="DNS and record types">
+<p class="lead">DNS is the internet's phone book: it turns names into addresses and other facts.</p>
+<p>When you visit a domain, your device asks a <b>resolver</b> (often your ISP or Cloudflare's 1.1.1.1). The resolver asks the domain's <b>authoritative nameservers</b>, which hold the real answer. Where you manage those records is called your <b>DNS provider</b>, which may differ from your <b>registrar</b>, the company you bought the domain from.</p>
+<p>Records are typed:</p>
+<div class="tbl"><table>
+<tr><th>Type</th><th>What it says</th></tr>
+<tr><td><code>A</code></td><td>This name points to an IPv4 address.</td></tr>
+<tr><td><code>AAAA</code></td><td>Same, for IPv6.</td></tr>
+<tr><td><code>CNAME</code></td><td>This name is an alias of another name. Can't sit on the bare domain in classic DNS.</td></tr>
+<tr><td><code>MX</code></td><td>Where email for this domain should be delivered.</td></tr>
+<tr><td><code>TXT</code></td><td>Free text, used to prove ownership and for email security (SPF, DKIM, DMARC).</td></tr>
+<tr><td><code>NS</code></td><td>Which nameservers are authoritative.</td></tr>
+<tr><td><code>CAA</code></td><td>Which certificate authorities may issue certificates for you.</td></tr>
+</table></div>
+<p>The bare domain (<code>farhan.app</code>) is called the <b>apex</b> or <b>root</b>. Anything in front of it is a <b>subdomain</b>. Cloudflare's "CNAME flattening" is a workaround for putting an alias on the apex.</p>
+<pre><code>dig farhan.app A +short
+dig farhan.app MX +short</code></pre>
+<aside class="say"><h4>Say it like this</h4><p>"Can you add a CNAME for status pointing at the uptime host, and a TXT record so Google can verify the domain?"</p></aside>
+</article>
+
+<article class="ch" id="ttl" data-part="Networking and DNS" data-title="TTL and propagation">
+<p class="lead">DNS answers are cached everywhere, and TTL says for how long.</p>
+<p>Every record has a <b>TTL</b> (time to live), in seconds. A TTL of 3600 means resolvers may keep reusing the answer for an hour before asking again.</p>
+<p>"Waiting for DNS to propagate" really means waiting for old cached answers to expire around the world. Nothing is actively spreading; caches are timing out.</p>
+<p>The professional trick before a migration is to <b>lower the TTL</b> a day in advance (say to 60 seconds), make the change, then raise it again once things are stable.</p>
+<p>TTL is also a general term: caches, tokens and CDN entries all have TTLs.</p>
+<aside class="say"><h4>Say it like this</h4><p>"Drop the TTL to five minutes tomorrow so the cutover on Thursday isn't stuck behind stale records."</p></aside>
+</article>
+
+<article class="ch" id="http" data-part="Networking and DNS" data-title="HTTP, methods and status codes">
+<p class="lead">HTTP is the language browsers and servers speak; status codes are its one-line verdicts.</p>
+<p>A request has a <b>method</b> (<code>GET</code> read, <code>POST</code> create, <code>PUT</code>/<code>PATCH</code> update, <code>DELETE</code> remove), a <b>path</b>, <b>headers</b> (metadata like cookies and content type) and sometimes a <b>body</b>.</p>
+<p>Status codes group by first digit:</p>
+<ul>
+<li><b>2xx</b> success: 200 OK, 201 Created, 204 No Content.</li>
+<li><b>3xx</b> go elsewhere: 301 permanent redirect, 302 temporary, 304 not modified (use your cache).</li>
+<li><b>4xx</b> the client did something wrong: 400 bad request, 401 not logged in, 403 logged in but not allowed, 404 not found, 429 too many requests.</li>
+<li><b>5xx</b> the server failed: 500 generic error, 502 bad gateway, 503 unavailable, 504 gateway timeout.</li>
+</ul>
+<p>502 and 504 matter for infra: they usually mean a proxy in front of your app couldn't reach it or gave up waiting. The proxy is fine; the thing behind it isn't.</p>
+<p>Versions: HTTP/1.1 is the classic, HTTP/2 multiplexes many requests over one connection, HTTP/3 runs over UDP (via QUIC) for faster connections on flaky networks.</p>
+<aside class="say"><h4>Say it like this</h4><p>"We're getting 502s from Traefik, so the app container has probably crashed or isn't healthy yet."</p></aside>
+</article>
+
+<article class="ch" id="tls" data-part="Networking and DNS" data-title="HTTPS, TLS and certificates">
+<p class="lead">TLS encrypts traffic and proves the server's identity; a certificate is the proof.</p>
+<p>HTTPS is HTTP wrapped in <b>TLS</b> (the successor to SSL; people still say "SSL cert" out of habit). During the <b>handshake</b>, the server presents a <b>certificate</b> signed by a <b>certificate authority</b> (CA) that browsers trust.</p>
+<p><b>Let's Encrypt</b> is a free CA whose certificates last 90 days, so tools renew them automatically using the <b>ACME</b> protocol. Other terms:</p>
+<ul>
+<li><b>Wildcard cert</b>: covers <code>*.farhan.app</code>, all subdomains one level deep.</li>
+<li><b>TLS termination</b>: the point where traffic is decrypted, usually at the load balancer or proxy. Behind that point traffic may be plain HTTP inside a private network.</li>
+<li><b>End-to-end encryption</b>: encrypted all the way to the app, not just to the edge.</li>
+<li><b>mTLS</b> (mutual TLS): both sides present certificates, common between internal services.</li>
+<li><b>HSTS</b>: a header telling browsers to only ever use HTTPS for your domain.</li>
+</ul>
+<aside class="yours"><h4>In your setup</h4><p>Traefik inside Coolify requests Let's Encrypt certificates for each subdomain and terminates TLS. Cloudflare terminates TLS for farhan.app at its edge.</p></aside>
+<aside class="say"><h4>Say it like this</h4><p>"We terminate TLS at the load balancer and use mTLS between services."</p></aside>
+</article>
+
+<article class="ch" id="proxy" data-part="Networking and DNS" data-title="Forward and reverse proxies">
+<p class="lead">A proxy is a middleman. Which side it works for decides its name.</p>
+<p>A <b>forward proxy</b> sits in front of <em>clients</em> and makes requests on their behalf. Corporate web filters are forward proxies.</p>
+<p>A <b>reverse proxy</b> sits in front of <em>servers</em>. Visitors talk to it, and it forwards each request to the right app behind it. It typically handles:</p>
+<ul>
+<li><b>Routing</b> by domain or path (host-based and path-based routing).</li>
+<li><b>TLS termination</b> and certificates.</li>
+<li>Compression, caching, redirects, header rewrites and basic rate limiting.</li>
+</ul>
+<p>Common reverse proxies: Nginx, Traefik, Caddy, HAProxy, Envoy. In Kubernetes the same job is called an <b>ingress</b> (or the newer <b>Gateway API</b>). The app behind the proxy is called the <b>upstream</b> or <b>origin</b>.</p>
+<aside class="yours"><h4>In your setup</h4><p>One public IP, many sites. Traefik reads the hostname (<code>mochi.farhan.app</code> versus <code>uptime.farhan.app</code>) and forwards to the matching container. That's host-based routing.</p></aside>
+<aside class="say"><h4>Say it like this</h4><p>"Put it behind the reverse proxy and let it handle certs, the app shouldn't be exposed directly."</p></aside>
+</article>
+
+<article class="ch" id="lb" data-part="Networking and DNS" data-title="Load balancers">
+<p class="lead">A load balancer spreads traffic across several copies of a service so no single one is overwhelmed or critical.</p>
+<p>It keeps a <b>pool</b> (or <b>target group</b>) of backends, runs <b>health checks</b> against them, and stops sending traffic to any that fail.</p>
+<p>Two families:</p>
+<ul>
+<li><b>Layer 4</b> balancers work on raw TCP/UDP connections. Fast and simple; they don't read the HTTP request.</li>
+<li><b>Layer 7</b> balancers understand HTTP, so they can route by path, header or cookie. A reverse proxy is effectively an L7 balancer.</li>
+</ul>
+<p>(The layers come from the <b>OSI model</b>, a seven-level way of describing networking. You only need L4 = transport and L7 = application.)</p>
+<p>Distribution methods include round robin, least connections and weighted. <b>Sticky sessions</b> keep a user on the same backend, which is a sign the app is storing state it shouldn't. <b>Draining</b> means letting existing requests finish before removing a server.</p>
+<aside class="say"><h4>Say it like this</h4><p>"The ALB health check is failing on one target, so it's been pulled from the pool."</p></aside>
+</article>
+
+<article class="ch" id="cdn" data-part="Networking and DNS" data-title="CDNs and the edge">
+<p class="lead">A CDN keeps copies of your content in data centres close to users.</p>
+<p>A <b>content delivery network</b> has hundreds of <b>points of presence</b> (PoPs) worldwide. The first request for a file goes to your <b>origin</b>; the CDN caches the response and serves later requests from the nearest PoP.</p>
+<ul>
+<li><b>Cache hit</b> / <b>miss</b>: served from the CDN, or had to go to origin. <b>Hit ratio</b> is the percentage of hits.</li>
+<li><b>Purge</b> or <b>invalidate</b>: throw away cached copies so new content appears.</li>
+<li><b>Cache-Control</b> headers tell the CDN and browsers how long to keep things.</li>
+<li><b>The edge</b> means those PoPs. "Running at the edge" means code executes in the PoP, not in one central region.</li>
+</ul>
+<p>CDNs also absorb DDoS attacks and often provide a <b>WAF</b> (web application firewall). Big names: Cloudflare, Fastly, Akamai, AWS CloudFront.</p>
+<aside class="yours"><h4>In your setup</h4><p>Cloudflare Pages is a CDN-first host. Your Astro build is uploaded once and served from every PoP. There's no origin server in the classic sense, which is why a static site is so fast and cheap.</p></aside>
+<aside class="say"><h4>Say it like this</h4><p>"It's a cache issue, purge the CDN and check the Cache-Control on that route."</p></aside>
+</article>
+
+<article class="ch" id="privnet" data-part="Networking and DNS" data-title="Firewalls, NAT and VPNs">
+<p class="lead">Most of network security is deciding who can reach what, then hiding everything else.</p>
+<p>A <b>firewall</b> allows or blocks traffic by rules, usually source, destination and port. Cloud providers call them <b>security groups</b> or <b>network firewall rules</b>. "Default deny" means everything is blocked unless a rule allows it.</p>
+<p><b>Ingress</b> is traffic coming in; <b>egress</b> is traffic going out. (Confusingly, Kubernetes also uses "ingress" for its reverse proxy.)</p>
+<p><b>NAT</b> (network address translation) lets many private machines share one public IP for outbound traffic. Your home router does this. In the cloud, a <b>NAT gateway</b> lets private servers reach the internet without being reachable from it.</p>
+<p>A <b>VPN</b> joins distant machines into one private network. Classic VPNs route through a central server. <b>Mesh VPNs</b> like Tailscale (built on WireGuard) connect devices directly. A <b>bastion host</b> or <b>jump box</b> is the older pattern: one hardened server you SSH into, then hop to private machines.</p>
+<aside class="yours"><h4>In your setup</h4><p>Blocking port 22 publicly and only allowing SSH over Tailscale is textbook practice. You've replaced a bastion host with a mesh VPN.</p></aside>
+<aside class="say"><h4>Say it like this</h4><p>"The database has no public ingress, you'll need to be on the VPN."</p></aside>
+</article>
+
+<article class="ch" id="vpc" data-part="Networking and DNS" data-title="VPCs and subnets">
+<p class="lead">A VPC is your own private network inside a cloud provider.</p>
+<p>A <b>virtual private cloud</b> is an isolated network where you place your servers and databases. You carve it into <b>subnets</b>, smaller address ranges written in <b>CIDR</b> notation like <code>10.0.1.0/24</code> (the <code>/24</code> means the first 24 bits are fixed, giving 256 addresses).</p>
+<p>The standard shape:</p>
+<ul>
+<li><b>Public subnets</b> hold things that face the internet: load balancers, NAT gateways.</li>
+<li><b>Private subnets</b> hold app servers and databases with no direct internet route.</li>
+<li><b>Route tables</b> decide where traffic from each subnet goes.</li>
+</ul>
+<p>Connecting VPCs together is <b>peering</b>; connecting a VPC to an office is a <b>site-to-site VPN</b> or a dedicated link (AWS Direct Connect, Azure ExpressRoute).</p>
+<aside class="say"><h4>Say it like this</h4><p>"The RDS instance sits in a private subnet; only the app tier's security group can reach 5432."</p></aside>
+</article>
+<!-- PART 3 -->
+<article class="ch" id="hosting" data-part="Hosting and cloud" data-title="Bare metal, VPS and cloud VMs">
+<p class="lead">Three ways to rent a computer, from most physical to most abstract.</p>
+<ul>
+<li><b>Bare metal</b> or a <b>dedicated server</b>: a whole physical machine that's yours. Predictable performance, slowest to provision.</li>
+<li><b>VPS</b> (virtual private server): a slice of a physical machine, carved out by a <b>hypervisor</b>. Fixed monthly price, generous bandwidth. Hetzner, DigitalOcean, Linode, OVH.</li>
+<li><b>Cloud VM</b>: technically also a VPS, but inside a large platform (AWS EC2, Azure VMs, Google Compute Engine) with APIs, autoscaling, and dozens of managed services beside it. Usually billed per second, with bandwidth charged separately.</li>
+</ul>
+<p>Industry shorthand: <b>on-prem</b> (on-premises) means servers in your own building; <b>colo</b> (colocation) means your hardware in someone else's data centre; <b>hybrid cloud</b> mixes on-prem with public cloud; <b>multi-cloud</b> means using more than one provider.</p>
+<aside class="say"><h4>Say it like this</h4><p>"For a steady workload a couple of Hetzner boxes beat EC2 on cost, but you lose the managed services around it."</p></aside>
+</article>
+
+<article class="ch" id="aas" data-part="Hosting and cloud" data-title="IaaS, PaaS, SaaS and friends">
+<p class="lead">The "as a service" ladder describes how much of the stack someone else manages.</p>
+<div class="tbl"><table>
+<tr><th>Model</th><th>You manage</th><th>Examples</th></tr>
+<tr><td>IaaS</td><td>OS, runtime, app, data</td><td>EC2, Hetzner Cloud</td></tr>
+<tr><td>PaaS</td><td>App and data only</td><td>Heroku, Render, Railway, Fly.io, Vercel</td></tr>
+<tr><td>FaaS / serverless</td><td>Individual functions</td><td>AWS Lambda, Cloudflare Workers</td></tr>
+<tr><td>SaaS</td><td>Nothing, you just use it</td><td>Gmail, Xero, Slack</td></tr>
+</table></div>
+<p>Others you'll hear: <b>DBaaS</b> (managed databases), <b>BaaS</b> (backend as a service, like Supabase or Firebase), <b>CaaS</b> (containers as a service).</p>
+<p>A <b>managed service</b> means the provider handles patching, backups and scaling. The trade-off is always cost and control versus effort.</p>
+<aside class="yours"><h4>In your setup</h4><p>Coolify turns your IaaS box into a self-hosted PaaS. You get Heroku-style "push to deploy", but you still own the OS updates, which is why you were debugging apt and Traefik yourself.</p></aside>
+</article>
+
+<article class="ch" id="serverless" data-part="Hosting and cloud" data-title="Serverless and edge functions">
+<p class="lead">Serverless means you hand over code, not servers, and pay only when it runs.</p>
+<p>There are still servers, you just never see them. Key ideas:</p>
+<ul>
+<li><b>Functions</b> run in response to <b>events</b>: an HTTP request, a file upload, a schedule, a queue message.</li>
+<li><b>Scale to zero</b>: nothing runs (or costs) when idle.</li>
+<li><b>Cold start</b>: the delay when a function spins up from nothing. Edge runtimes like Cloudflare Workers have tiny cold starts; traditional Lambda can take hundreds of milliseconds.</li>
+<li><b>Stateless</b>: each run starts fresh, so data lives in a database or storage, not in memory.</li>
+<li>Limits on execution time and memory mean long jobs don't fit well.</li>
+</ul>
+<p><b>Edge functions</b> are serverless functions that run in CDN PoPs, close to users. "Serverless" has also broadened to mean any service with no servers to manage, such as serverless databases (Neon, PlanetScale) that scale and bill by usage.</p>
+<aside class="yours"><h4>In your setup</h4><p>Your CLAUDE.md "serverless first" rule is a common industry stance: default to Workers and Actions, and escalate to a long-running server only when you need persistent processes, big databases or websockets.</p></aside>
+</article>
+
+<article class="ch" id="regions" data-part="Hosting and cloud" data-title="Regions, zones and latency">
+<p class="lead">Where your servers physically sit affects speed, resilience and legal compliance.</p>
+<ul>
+<li>A <b>region</b> is a geographic area, like <code>eu-west-2</code> (AWS London) or Hetzner's <code>fsn1</code> (Falkenstein).</li>
+<li>An <b>availability zone</b> (AZ) is one or more separate data centres within a region, with independent power and networking. Running across multiple AZs protects you from one building failing.</li>
+<li><b>Latency</b> is travel time for a request, measured in milliseconds. London to Frankfurt is about 15ms; London to Sydney about 250ms. Nothing beats the speed of light, so distance matters.</li>
+<li><b>Data residency</b> or <b>sovereignty</b>: rules requiring data to stay in a country or region, important under UK GDPR and for public sector contracts.</li>
+</ul>
+<p>"Multi-AZ" is the standard minimum for production resilience; "multi-region" is for large companies or strict uptime targets, and is much harder because data has to be synchronised over long distances.</p>
+<aside class="say"><h4>Say it like this</h4><p>"The database is multi-AZ but single-region, so a regional outage would still take us down."</p></aside>
+</article>
+
+<article class="ch" id="aws" data-part="Hosting and cloud" data-title="AWS service names you'll hear">
+<p class="lead">AWS dominates cloud conversations, and its product names are used as shorthand even by people on other clouds.</p>
+<div class="tbl"><table>
+<tr><th>Name</th><th>What it is</th></tr>
+<tr><td>EC2</td><td>Virtual machines.</td></tr>
+<tr><td>S3</td><td>Object storage for files. "S3-compatible" is an industry standard API.</td></tr>
+<tr><td>RDS / Aurora</td><td>Managed relational databases (Postgres, MySQL).</td></tr>
+<tr><td>DynamoDB</td><td>Managed NoSQL key-value database.</td></tr>
+<tr><td>Lambda</td><td>Serverless functions.</td></tr>
+<tr><td>ECS / Fargate</td><td>Run containers without managing Kubernetes.</td></tr>
+<tr><td>EKS</td><td>Managed Kubernetes.</td></tr>
+<tr><td>ECR</td><td>Container image registry.</td></tr>
+<tr><td>CloudFront</td><td>CDN.</td></tr>
+<tr><td>Route 53</td><td>DNS.</td></tr>
+<tr><td>ALB / NLB</td><td>Layer 7 and layer 4 load balancers.</td></tr>
+<tr><td>VPC</td><td>Private networking.</td></tr>
+<tr><td>IAM</td><td>Users, roles and permissions.</td></tr>
+<tr><td>SQS / SNS</td><td>Message queue / pub-sub notifications.</td></tr>
+<tr><td>CloudWatch</td><td>Logs, metrics and alarms.</td></tr>
+<tr><td>Secrets Manager</td><td>Stores passwords and API keys.</td></tr>
+<tr><td>CloudFormation / CDK</td><td>AWS's infrastructure-as-code tools.</td></tr>
+</table></div>
+<aside class="say"><h4>Say it like this</h4><p>"Uploads go to S3, a Lambda picks up the event and pushes a job onto SQS."</p></aside>
+</article>
+
+<article class="ch" id="equiv" data-part="Hosting and cloud" data-title="Translating between AWS, Azure and Google Cloud">
+<p class="lead">The big three sell the same building blocks under different names.</p>
+<div class="tbl"><table>
+<tr><th>Job</th><th>AWS</th><th>Azure</th><th>Google Cloud</th></tr>
+<tr><td>VMs</td><td>EC2</td><td>Virtual Machines</td><td>Compute Engine</td></tr>
+<tr><td>Object storage</td><td>S3</td><td>Blob Storage</td><td>Cloud Storage</td></tr>
+<tr><td>Managed SQL</td><td>RDS</td><td>Azure SQL / Database for PostgreSQL</td><td>Cloud SQL</td></tr>
+<tr><td>Functions</td><td>Lambda</td><td>Functions</td><td>Cloud Run functions</td></tr>
+<tr><td>Containers, no K8s</td><td>ECS / Fargate</td><td>Container Apps</td><td>Cloud Run</td></tr>
+<tr><td>Kubernetes</td><td>EKS</td><td>AKS</td><td>GKE</td></tr>
+<tr><td>Identity</td><td>IAM</td><td>Entra ID + RBAC</td><td>Cloud IAM</td></tr>
+<tr><td>Monitoring</td><td>CloudWatch</td><td>Azure Monitor</td><td>Cloud Monitoring</td></tr>
+<tr><td>Data warehouse</td><td>Redshift</td><td>Synapse / Fabric</td><td>BigQuery</td></tr>
+</table></div>
+<p>Azure is strong wherever Microsoft 365 is entrenched (so, most UK corporates and much of the public sector). Google Cloud is known for data and analytics (BigQuery). Cloudflare is increasingly a fourth option for edge compute, storage (R2) and databases (D1).</p>
+<aside class="yours"><h4>In your setup</h4><p>Given your FP&amp;A and BI background, the data warehouse row is the one you're likeliest to meet at work: Power BI on top of Azure/Fabric, or dashboards over BigQuery or Snowflake.</p></aside>
+</article>
+
+<article class="ch" id="iam" data-part="Hosting and cloud" data-title="Cloud accounts and IAM">
+<p class="lead">IAM (identity and access management) controls who can do what to which cloud resources.</p>
+<ul>
+<li>A <b>principal</b> is anything that can act: a user, a group, or a <b>role</b>.</li>
+<li>A <b>role</b> is a set of permissions that people or machines <em>assume</em> temporarily, rather than holding permanent keys.</li>
+<li>A <b>policy</b> is a document listing allowed or denied actions on resources, such as "may read objects in this S3 bucket".</li>
+<li>A <b>service account</b> is an identity for software, not a human.</li>
+<li><b>Access keys</b> are long-lived credentials; modern practice avoids them in favour of short-lived tokens, for example GitHub Actions using <b>OIDC</b> to assume a cloud role without storing any secret.</li>
+</ul>
+<p>Large organisations use many accounts (AWS <b>Organizations</b>, Azure <b>subscriptions</b>, GCP <b>projects</b>) to separate prod from dev and contain damage. The root or owner account is locked away and rarely used.</p>
+<aside class="say"><h4>Say it like this</h4><p>"Don't give the CI user admin, create a deploy role scoped to that one bucket."</p></aside>
+</article>
+
+<article class="ch" id="costs" data-part="Hosting and cloud" data-title="How cloud billing works (and bites)">
+<p class="lead">The part of infra where your accounting background is a genuine advantage.</p>
+<ul>
+<li><b>On-demand</b>: pay per second or hour, no commitment. The most expensive rate.</li>
+<li><b>Reserved instances</b> and <b>savings plans</b>: commit to one or three years for large discounts. Essentially prepayment with a take-or-pay risk.</li>
+<li><b>Spot</b> (AWS) or <b>preemptible</b> (GCP): spare capacity at a steep discount that can be taken back at short notice. Good for batch jobs.</li>
+<li><b>Egress fees</b>: moving data <em>out</em> of a cloud costs money; moving it in is usually free. This is the classic surprise bill, and a reason people like Cloudflare R2, which charges no egress.</li>
+<li><b>Tagging</b>: labelling resources by team or project so costs can be allocated, just like cost centres.</li>
+<li><b>FinOps</b>: the discipline of managing cloud spend, with its own job titles. Unit economics such as "cost per customer" or "cost per 1,000 requests" are the language it uses.</li>
+</ul>
+<p>Cloud costs are mostly opex; buying servers is capex. That shift is one reason finance teams were involved in cloud migrations from the start.</p>
+<aside class="say"><h4>Say it like this</h4><p>"Our compute is covered by a savings plan, the variance is almost all egress from the analytics export."</p></aside>
+</article>
+<!-- PART 4 -->
+<article class="ch" id="vm-container" data-part="Containers and orchestration" data-title="VMs versus containers">
+<p class="lead">A VM fakes a whole computer; a container fakes just an isolated process on a shared one.</p>
+<p>A <b>virtual machine</b> runs a full operating system on virtual hardware provided by a <b>hypervisor</b>. Strong isolation, but each VM carries a whole OS, so it's heavy and slow to boot.</p>
+<p>A <b>container</b> shares the host's operating system <b>kernel</b> and isolates only the process, its files and its network. It starts in milliseconds and is small, but isolation is weaker than a VM.</p>
+<p>In practice they stack: containers run <em>inside</em> VMs. Your VPS is a VM; Docker runs containers inside it.</p>
+<p>Words to know: the <b>host</b> is the machine running containers; the <b>container runtime</b> actually runs them (Docker Engine, containerd, Podman); <b>OCI</b> is the open standard for image formats, so images work across tools.</p>
+<aside class="say"><h4>Say it like this</h4><p>"We containerised the app so it runs the same on a laptop, in CI and in prod."</p></aside>
+</article>
+
+<article class="ch" id="images" data-part="Containers and orchestration" data-title="Images, tags and registries">
+<p class="lead">An image is the recipe's output; a container is that image running.</p>
+<p>A <b>Dockerfile</b> lists steps to build an <b>image</b>: start from a <b>base image</b>, copy code, install dependencies, set a start command. Each step creates a cached <b>layer</b>, so unchanged steps don't rebuild.</p>
+<pre><code>FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+CMD ["node", "server.js"]</code></pre>
+<p>Images are stored in a <b>registry</b>: Docker Hub, GitHub Container Registry (GHCR), AWS ECR. An image is named <code>repository:tag</code>, for example <code>umami:postgresql-latest</code>.</p>
+<ul>
+<li>A <b>tag</b> is a movable label. <code>latest</code> is just a convention and can silently change, so production pins specific versions.</li>
+<li>A <b>digest</b> (<code>sha256:…</code>) is an unchangeable fingerprint of exact contents.</li>
+<li><b>Multi-stage builds</b> compile in one stage and copy only the output into a slim final image.</li>
+<li><b>Image scanning</b> checks images for known vulnerabilities.</li>
+</ul>
+<aside class="say"><h4>Say it like this</h4><p>"Pin the image by digest, not latest, or the next pull could change prod under us."</p></aside>
+</article>
+
+<article class="ch" id="compose" data-part="Containers and orchestration" data-title="Volumes, networks and Compose">
+<p class="lead">Containers are disposable, so anything worth keeping lives outside them.</p>
+<p>A container's own filesystem is thrown away when it's replaced. To keep data you attach a <b>volume</b> (storage managed by Docker) or a <b>bind mount</b> (a folder from the host). Your nightly rsync backs up volumes precisely because that's where the real data lives.</p>
+<p>Containers talk to each other over Docker <b>networks</b>, using service names as hostnames (<code>db:5432</code>) instead of IPs.</p>
+<p><b>Docker Compose</b> describes a multi-container app in one YAML file: which images, which ports, which volumes, which environment variables, and what depends on what. It's the standard for running a small stack on one machine.</p>
+<pre><code>services:
+  app:
+    image: ghcr.io/me/app:1.4.2
+    environment:
+      DATABASE_URL: postgres://app@db:5432/app
+    depends_on: [db]
+  db:
+    image: postgres:16
+    volumes: [pgdata:/var/lib/postgresql/data]
+volumes:
+  pgdata: {}</code></pre>
+<aside class="yours"><h4>In your setup</h4><p>Coolify's one-click services, like Umami, are Compose files under the hood, with Traefik labels added for routing.</p></aside>
+</article>
+
+<article class="ch" id="orchestration" data-part="Containers and orchestration" data-title="Why orchestration exists">
+<p class="lead">Compose runs containers on one machine. Orchestration runs them across many, and keeps them running.</p>
+<p>Once you have dozens of servers and hundreds of containers, someone has to decide:</p>
+<ul>
+<li>which machine each container runs on (<b>scheduling</b>);</li>
+<li>what to do when a container or machine dies (<b>self-healing</b>);</li>
+<li>how to add copies under load (<b>autoscaling</b>);</li>
+<li>how to roll out a new version without downtime (<b>rolling updates</b>);</li>
+<li>how services find each other when they keep moving (<b>service discovery</b>).</li>
+</ul>
+<p>An <b>orchestrator</b> does this. You declare the <b>desired state</b> ("three copies of the API, version 1.4") and it constantly works to make reality match. That loop is called <b>reconciliation</b>, and "declarative" is the word for describing what you want rather than the steps to get there.</p>
+<p>Kubernetes won this category. Alternatives: HashiCorp Nomad, Docker Swarm (fading), and managed options like AWS ECS or Google Cloud Run that hide the orchestrator entirely.</p>
+<aside class="say"><h4>Say it like this</h4><p>"We don't need Kubernetes at our size, Cloud Run gives us autoscaling without running a cluster."</p></aside>
+</article>
+
+<article class="ch" id="k8s" data-part="Containers and orchestration" data-title="Kubernetes vocabulary">
+<p class="lead">Kubernetes (K8s) has its own dictionary. These words cover most conversations.</p>
+<div class="tbl"><table>
+<tr><th>Term</th><th>Meaning</th></tr>
+<tr><td>Cluster</td><td>The whole system: a control plane plus worker machines.</td></tr>
+<tr><td>Control plane</td><td>The brain that stores desired state and schedules work.</td></tr>
+<tr><td>Node</td><td>A worker machine (usually a VM).</td></tr>
+<tr><td>Pod</td><td>The smallest unit: one or more containers that share a network address.</td></tr>
+<tr><td>Deployment</td><td>"Keep N copies of this pod running", with rolling updates.</td></tr>
+<tr><td>ReplicaSet</td><td>What a Deployment uses to hold the count. Rarely touched directly.</td></tr>
+<tr><td>Service</td><td>A stable internal address that load-balances across matching pods.</td></tr>
+<tr><td>Ingress / Gateway</td><td>Routes outside HTTP traffic to services. The cluster's reverse proxy.</td></tr>
+<tr><td>Namespace</td><td>A folder-like boundary to separate teams or environments.</td></tr>
+<tr><td>ConfigMap / Secret</td><td>Configuration and sensitive values injected into pods.</td></tr>
+<tr><td>PersistentVolume</td><td>Storage that outlives pods.</td></tr>
+<tr><td>StatefulSet</td><td>Like a Deployment, for things needing stable identity, such as databases.</td></tr>
+<tr><td>DaemonSet</td><td>One pod on every node, for agents like log collectors.</td></tr>
+<tr><td>Job / CronJob</td><td>Run to completion, once or on a schedule.</td></tr>
+<tr><td>HPA</td><td>Horizontal Pod Autoscaler: adds pods under load.</td></tr>
+<tr><td>kubectl</td><td>The command-line tool ("cube-control" or "cube-cuttle").</td></tr>
+<tr><td>Manifest</td><td>A YAML file describing a resource.</td></tr>
+</table></div>
+<aside class="say"><h4>Say it like this</h4><p>"The pod's in CrashLoopBackOff, check the logs, it's probably a missing secret."</p></aside>
+</article>
+
+<article class="ch" id="k8s-eco" data-part="Containers and orchestration" data-title="Helm, sidecars and the K8s ecosystem">
+<p class="lead">The tools and patterns that grew up around Kubernetes.</p>
+<ul>
+<li><b>Helm</b>: a package manager for Kubernetes. A <b>chart</b> is a templated bundle of manifests; you install it with your own <b>values</b>.</li>
+<li><b>Kustomize</b>: an alternative that layers patches on plain YAML instead of templating it.</li>
+<li><b>Operator</b>: software that runs inside the cluster and manages a complex app (like a Postgres cluster) the way a human operator would, using <b>custom resources</b>.</li>
+<li><b>Sidecar</b>: a helper container in the same pod as your app, handling logging, proxying or secrets so your app doesn't have to.</li>
+<li><b>Service mesh</b> (Istio, Linkerd): sidecars or node agents on every service that add mTLS, retries and traffic metrics between services without code changes.</li>
+<li><b>k3s</b>, <b>kind</b>, <b>minikube</b>: lightweight Kubernetes for small servers or laptops.</li>
+<li><b>Managed K8s</b>: EKS, AKS and GKE run the control plane for you.</li>
+</ul>
+<p>The <b>CNCF</b> (Cloud Native Computing Foundation) hosts Kubernetes and many of these tools. "Cloud native" loosely means containers, orchestration, microservices and declarative config.</p>
+<aside class="say"><h4>Say it like this</h4><p>"We install it from the upstream Helm chart and override the values per environment."</p></aside>
+</article>
+<!-- PART 5 -->
+<article class="ch" id="git-words" data-part="CI/CD and DevOps" data-title="Git and pull request vocabulary">
+<p class="lead">The words teams use around code changes, beyond commit and push.</p>
+<ul>
+<li><b>PR</b> (pull request, GitHub) or <b>MR</b> (merge request, GitLab): a proposal to merge a branch, with discussion and checks.</li>
+<li><b>Review</b>, <b>approve</b>, <b>request changes</b>. A <b>reviewer</b> is assigned; <b>CODEOWNERS</b> files auto-assign them by folder.</li>
+<li><b>Checks</b> or <b>status checks</b>: automated tests that must pass before merging. "The PR is green" means all passed.</li>
+<li><b>Branch protection</b>: rules such as "main needs one approval and passing checks".</li>
+<li><b>Merge</b>, <b>squash merge</b> (all commits become one), <b>rebase</b> (replay commits on top of the latest main for a straight history).</li>
+<li><b>Merge conflict</b>: two changes touched the same lines.</li>
+<li><b>Upstream</b>: the original repo you forked from, or the remote branch you track.</li>
+<li><b>Monorepo</b>: many projects in one repository. <b>Polyrepo</b>: one per project.</li>
+<li><b>Cherry-pick</b>: copy one specific commit onto another branch, often for a hotfix.</li>
+</ul>
+<aside class="say"><h4>Say it like this</h4><p>"Can you rebase on main? There's a conflict, and CI didn't run on the latest commit."</p></aside>
+</article>
+
+<article class="ch" id="branching" data-part="CI/CD and DevOps" data-title="Branching strategies">
+<p class="lead">How a team organises branches says a lot about how often it ships.</p>
+<p><b>Trunk-based development</b>: everyone merges small changes into <code>main</code> (the "trunk") at least daily. Unfinished features hide behind feature flags. Used by most fast-moving teams.</p>
+<p><b>GitHub flow</b>: short-lived feature branches off main, a PR each, merge and deploy. A light version of trunk-based.</p>
+<p><b>GitFlow</b>: long-lived <code>develop</code> and <code>main</code> branches plus release and hotfix branches. Suits scheduled releases, like packaged software; seen as heavy for web apps.</p>
+<p>Related terms: a <b>feature branch</b> holds one piece of work; a <b>release branch</b> freezes code for a version; a <b>hotfix</b> is an urgent fix straight to production; <b>long-lived branches</b> are a warning sign because they drift and cause painful merges.</p>
+<aside class="say"><h4>Say it like this</h4><p>"We're trunk-based, so keep PRs small and put the new checkout behind a flag."</p></aside>
+</article>
+
+<article class="ch" id="ci" data-part="CI/CD and DevOps" data-title="Continuous integration (CI)">
+<p class="lead">CI means every change is automatically built and tested as soon as it's pushed.</p>
+<p>The "integration" in CI is integrating your code with everyone else's, frequently, so problems surface early. A CI system runs a <b>pipeline</b> on each push or PR, typically:</p>
+<ul>
+<li><b>Install</b> dependencies (with caching to save time).</li>
+<li><b>Lint</b> and <b>format check</b>: style and obvious mistakes.</li>
+<li><b>Type check</b>, if the language has types.</li>
+<li><b>Test</b>: <b>unit</b> tests (small pieces), <b>integration</b> tests (pieces together, such as app plus database), and <b>end-to-end</b> (E2E) tests that drive a real browser.</li>
+<li><b>Build</b>: produce the deployable output, called a <b>build artifact</b>.</li>
+<li><b>Security scans</b>: dependency vulnerabilities (<b>SCA</b>), code patterns (<b>SAST</b>), leaked secrets.</li>
+</ul>
+<p>A <b>flaky test</b> passes and fails randomly and slowly destroys trust in CI. "Breaking the build" means your change made main fail.</p>
+<p>CI tools: GitHub Actions, GitLab CI, CircleCI, Jenkins (old but everywhere), Buildkite.</p>
+<aside class="say"><h4>Say it like this</h4><p>"CI's red on main, someone merged with a flaky E2E test skipped."</p></aside>
+</article>
+
+<article class="ch" id="cd" data-part="CI/CD and DevOps" data-title="Continuous delivery and deployment (CD)">
+<p class="lead">Two different things share the letters CD.</p>
+<p><b>Continuous delivery</b>: every change that passes CI is <em>ready</em> to release, and releasing is a button press.</p>
+<p><b>Continuous deployment</b>: every change that passes CI <em>is</em> released automatically, with no human step.</p>
+<p>A <b>deployment pipeline</b> promotes the same build artifact through environments: dev, then staging, then production. <b>Promotion</b> means moving a tested build forward rather than rebuilding it, so what you tested is exactly what ships.</p>
+<p>Other terms: <b>release</b> (making a version available, which may differ from deploying it if features are flagged off), <b>deploy freeze</b> (no deploys, often around Christmas or year end), <b>manual approval gate</b>, <b>deployment frequency</b> and <b>lead time</b> (two of the four <b>DORA metrics</b> engineering teams are measured on; the others are change failure rate and time to restore).</p>
+<aside class="yours"><h4>In your setup</h4><p>farhan.app does continuous deployment: a push to GitHub, or a WordPress publish via the deploy hook, triggers a build on Cloudflare Pages that goes straight live.</p></aside>
+</article>
+
+<article class="ch" id="gha" data-part="CI/CD and DevOps" data-title="Anatomy of GitHub Actions">
+<p class="lead">GitHub Actions has precise terms. Using the right one is an instant credibility signal.</p>
+<div class="tbl"><table>
+<tr><th>Term</th><th>Meaning</th></tr>
+<tr><td>Workflow</td><td>A YAML file in <code>.github/workflows/</code>. The whole automated process.</td></tr>
+<tr><td>Trigger / event</td><td>What starts it: <code>push</code>, <code>pull_request</code>, <code>schedule</code> (cron), <code>workflow_dispatch</code> (manual button).</td></tr>
+<tr><td>Run</td><td>One execution of a workflow.</td></tr>
+<tr><td>Job</td><td>A group of steps on one machine. Jobs run in parallel unless linked by <code>needs</code>.</td></tr>
+<tr><td>Step</td><td>A single command or action inside a job.</td></tr>
+<tr><td>Action</td><td>A reusable step others have published, like <code>actions/checkout</code>.</td></tr>
+<tr><td>Runner</td><td>The machine that runs a job. GitHub-hosted, or self-hosted on your own server.</td></tr>
+<tr><td>Matrix</td><td>Run the same job across versions or OSes.</td></tr>
+<tr><td>Secrets / variables</td><td>Encrypted values and plain config available to workflows.</td></tr>
+<tr><td>Artifact</td><td>A file a run saves for later jobs or download.</td></tr>
+<tr><td>Environment</td><td>A named target (like production) that can require approvals.</td></tr>
+</table></div>
+<pre><code>on: { push: { branches: [main] } }
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm test</code></pre>
+<aside class="warn"><p>So a GitHub Action isn't "an integration". You'd say "a workflow runs on push", "the deploy job failed", or "we use the checkout action". An <b>integration</b> or <b>GitHub App</b> is a third-party service connected to your repo, such as Vercel, Slack or Dependabot.</p></aside>
+</article>
+
+<article class="ch" id="envs" data-part="CI/CD and DevOps" data-title="Environments, config and preview deploys">
+<p class="lead">Same code, different settings, different audiences.</p>
+<ul>
+<li><b>Local</b>: your machine.</li>
+<li><b>Dev</b>: a shared development environment.</li>
+<li><b>Staging</b> (or <b>pre-prod</b>, <b>UAT</b>): as close to production as possible, for final checks. UAT, user acceptance testing, is where business users sign off, a term you'll know from finance system rollouts.</li>
+<li><b>Production</b>: real users, real data.</li>
+<li><b>Preview</b> or <b>ephemeral</b> environments: a temporary copy spun up for each PR, then destroyed on merge.</li>
+</ul>
+<p>What differs between environments is <b>configuration</b>, usually passed in as <b>environment variables</b> (<code>DATABASE_URL</code>, <code>API_KEY</code>). The <b>twelve-factor app</b> principles say config belongs in the environment, never in code. <b>Environment parity</b> means keeping them alike so "works in staging" predicts "works in prod". <b>Config drift</b> is when they quietly diverge.</p>
+<aside class="yours"><h4>In your setup</h4><p>Cloudflare Pages already gives you a preview URL per branch. That's an ephemeral environment, and a nice place to check WordPress content changes before they hit main.</p></aside>
+</article>
+
+<article class="ch" id="deploy-strat" data-part="CI/CD and DevOps" data-title="Deployment strategies and rollbacks">
+<p class="lead">How you swap old code for new decides how much a bad release can hurt.</p>
+<ul>
+<li><b>Recreate</b>: stop old, start new. Simple, with downtime.</li>
+<li><b>Rolling</b>: replace instances a few at a time. The default in Kubernetes.</li>
+<li><b>Blue-green</b>: run a full new copy (green) beside the old (blue), then switch traffic in one go. Instant rollback by switching back. Costs double capacity briefly.</li>
+<li><b>Canary</b>: send a small share of traffic (say 5%) to the new version, watch metrics, then ramp up. Named after canaries in coal mines.</li>
+<li><b>Shadow</b> or <b>dark launch</b>: send copied traffic to the new version without users seeing its responses.</li>
+</ul>
+<p><b>Zero-downtime deployment</b> is the goal. A <b>rollback</b> returns to the previous version; a <b>roll-forward</b> fixes the bug with another quick release instead. Database changes complicate rollbacks, which is why migrations are designed to be backwards compatible.</p>
+<aside class="say"><h4>Say it like this</h4><p>"Canary looked fine at 10%, error rate's flat, promoting to 100%."</p></aside>
+</article>
+
+<article class="ch" id="flags" data-part="CI/CD and DevOps" data-title="Feature flags">
+<p class="lead">Feature flags separate deploying code from releasing a feature.</p>
+<p>A <b>feature flag</b> (or <b>toggle</b>) is an if-statement controlled from outside the code. New code ships switched off, then gets turned on for internal staff, then a percentage of users, then everyone.</p>
+<ul>
+<li><b>Progressive rollout</b>: turning a flag on gradually.</li>
+<li><b>Targeting</b>: on for certain users, plans or countries.</li>
+<li><b>Kill switch</b>: a flag that turns off a misbehaving feature without a deploy.</li>
+<li><b>A/B test</b> or <b>experiment</b>: flags used to compare variants on a metric.</li>
+<li><b>Flag debt</b>: old flags nobody removed, cluttering the code.</li>
+</ul>
+<p>Tools: LaunchDarkly, Unleash, Flagsmith, PostHog, Statsig, or a simple config table.</p>
+<aside class="say"><h4>Say it like this</h4><p>"It's merged but dark, we'll flip the flag for internal users first."</p></aside>
+</article>
+
+<article class="ch" id="iac" data-part="CI/CD and DevOps" data-title="Infrastructure as code and GitOps">
+<p class="lead">Instead of clicking around dashboards, describe your infrastructure in files and let a tool create it.</p>
+<p><b>Infrastructure as code</b> (IaC) means servers, networks, DNS and databases are defined in version-controlled files. Benefits: repeatable, reviewable in PRs, and you can rebuild everything from scratch.</p>
+<ul>
+<li><b>Terraform</b> (and its open-source fork <b>OpenTofu</b>): the most common IaC tool, works across all clouds. You write <b>resources</b> in HCL, run <code>plan</code> to preview changes, then <code>apply</code>. It records reality in a <b>state file</b>.</li>
+<li><b>Pulumi</b>: IaC in real programming languages like TypeScript.</li>
+<li><b>CloudFormation</b>, <b>CDK</b>, <b>Bicep</b>: AWS and Azure native tools.</li>
+<li><b>Ansible</b>: <b>configuration management</b>, setting up software on existing servers, rather than creating them.</li>
+</ul>
+<p><b>ClickOps</b> is the joking term for managing infra by clicking. <b>Drift</b> is when reality no longer matches the code. <b>GitOps</b> goes further: the Git repo is the source of truth, and an agent (Argo CD, Flux) continuously syncs the live system to match it.</p>
+<aside class="yours"><h4>In your setup</h4><p>Your Hetzner guide is documentation of ClickOps. The natural next step would be a Terraform file that creates the server and firewall, plus an Ansible playbook or cloud-init script that installs Coolify.</p></aside>
+</article>
+
+<article class="ch" id="semver" data-part="CI/CD and DevOps" data-title="Versions, releases and dependencies">
+<p class="lead">Version numbers are a contract about how risky an upgrade is.</p>
+<p><b>Semantic versioning</b> (semver) uses <code>MAJOR.MINOR.PATCH</code>, such as <code>2.4.1</code>:</p>
+<ul>
+<li><b>Major</b>: breaking changes. Upgrading may require code changes.</li>
+<li><b>Minor</b>: new features, backwards compatible.</li>
+<li><b>Patch</b>: bug fixes only.</li>
+</ul>
+<p>Pre-releases look like <code>3.0.0-beta.2</code>. <b>LTS</b> (long-term support) versions get fixes for years. <b>EOL</b> (end of life) means no more security patches, which is why Ubuntu 22.04's support window matters.</p>
+<p>Dependency terms: a <b>lockfile</b> (<code>package-lock.json</code>) pins exact versions; <b>transitive dependencies</b> are your dependencies' dependencies; <b>Dependabot</b> and <b>Renovate</b> open PRs to update them; a <b>changelog</b> lists what changed; <b>release notes</b> explain it for users. <b>Tags</b> in Git mark the commit each version came from.</p>
+<aside class="say"><h4>Say it like this</h4><p>"It's a major bump, read the changelog for breaking changes before merging the Renovate PR."</p></aside>
+</article>
+
+<article class="ch" id="devops" data-part="CI/CD and DevOps" data-title="DevOps, SRE and platform engineering">
+<p class="lead">Three overlapping job families that all sit between writing code and running it.</p>
+<p><b>DevOps</b> started as a culture: developers and operations share responsibility instead of throwing code over a wall. "You build it, you run it." It's now also a job title, usually meaning someone who owns CI/CD, cloud and IaC.</p>
+<p><b>SRE</b> (site reliability engineering) came from Google: software engineers who treat reliability as an engineering problem, using SLOs, error budgets and automation to reduce <b>toil</b> (repetitive manual work).</p>
+<p><b>Platform engineering</b> builds an <b>internal developer platform</b> (IDP): golden paths, templates and self-service tools so product developers can ship without being infra experts. Backstage is a common portal.</p>
+<p>Also heard: <b>DevSecOps</b> (security built into the pipeline), <b>MLOps</b> (the same ideas for machine-learning models), <b>shift left</b> (catch problems earlier in the process, such as security checks in CI rather than after release).</p>
+<aside class="say"><h4>Say it like this</h4><p>"The platform team owns the golden path, product teams just fill in a template and get CI, observability and a deploy target."</p></aside>
+</article>
+<!-- PART 6 -->
+<article class="ch" id="sql-nosql" data-part="Databases and data" data-title="SQL, NoSQL and picking a database">
+<p class="lead">Relational databases are the default; everything else is a specialist tool.</p>
+<p><b>Relational</b> (SQL) databases store data in tables with a fixed <b>schema</b> and join them with keys. Postgres, MySQL/MariaDB, SQL Server, SQLite. Postgres is the modern favourite.</p>
+<p><b>NoSQL</b> is an umbrella for everything else:</p>
+<ul>
+<li><b>Document</b> stores (MongoDB, Firestore): JSON-like records, flexible shape.</li>
+<li><b>Key-value</b> stores (Redis, DynamoDB): look up a value by key, extremely fast.</li>
+<li><b>Wide-column</b> (Cassandra): huge write volumes.</li>
+<li><b>Graph</b> (Neo4j): relationships are the main data.</li>
+<li><b>Search</b> engines (Elasticsearch, OpenSearch, Meilisearch): full-text search.</li>
+<li><b>Time-series</b> (TimescaleDB, InfluxDB): metrics over time.</li>
+<li><b>Vector</b> databases (pgvector, Pinecone): similarity search for AI features.</li>
+</ul>
+<p>For analytics there's a split you'll recognise from BI: <b>OLTP</b> databases handle live transactions; <b>OLAP</b> systems (data warehouses like Snowflake, BigQuery) handle big analytical queries. <b>ETL/ELT</b> pipelines move data from one to the other.</p>
+<aside class="say"><h4>Say it like this</h4><p>"Just use Postgres until you have a specific reason not to."</p></aside>
+</article>
+
+<article class="ch" id="acid" data-part="Databases and data" data-title="Transactions, ACID and indexes">
+<p class="lead">Why databases can be trusted with money, and why some queries are slow.</p>
+<p>A <b>transaction</b> groups operations so they all succeed or all fail. Like a journal that must balance before it posts. <b>ACID</b> describes the guarantees:</p>
+<ul>
+<li><b>Atomicity</b>: all or nothing.</li>
+<li><b>Consistency</b>: rules and constraints always hold.</li>
+<li><b>Isolation</b>: concurrent transactions don't see each other's half-finished work.</li>
+<li><b>Durability</b>: once committed, it survives a crash.</li>
+</ul>
+<p>An <b>index</b> is a sorted lookup structure on a column, like an index at the back of a book. It makes reads fast and writes slightly slower. A <b>full table scan</b> reads every row, which is what happens without a useful index. <code>EXPLAIN</code> shows how the database plans to run a query.</p>
+<p>Other terms: <b>primary key</b>, <b>foreign key</b>, <b>normalisation</b> (no duplicated data) versus <b>denormalisation</b> (deliberate duplication for speed), <b>deadlock</b> (two transactions waiting on each other), and the <b>N+1 query problem</b>, where code runs one query per item in a list instead of one query for all.</p>
+<aside class="say"><h4>Say it like this</h4><p>"That endpoint is doing N+1 queries and the filter column isn't indexed."</p></aside>
+</article>
+
+<article class="ch" id="migrations" data-part="Databases and data" data-title="Schema migrations">
+<p class="lead">Migrations are version control for your database structure.</p>
+<p>A <b>migration</b> is a small script that changes the schema: add a table, add a column, create an index. They're numbered or timestamped, committed to Git, and applied in order. The database records which have run.</p>
+<p>Most frameworks include a migration tool (Prisma, Drizzle, Django, Rails, Laravel, Flyway, Liquibase). "Run the migrations" is usually a step in the deploy pipeline.</p>
+<p>The hard part is changing a live database without downtime. The standard approach is <b>expand and contract</b>:</p>
+<ul>
+<li><b>Expand</b>: add the new column alongside the old one; code writes to both.</li>
+<li><b>Backfill</b>: copy existing data into the new column.</li>
+<li><b>Switch</b>: code reads from the new column.</li>
+<li><b>Contract</b>: remove the old column in a later release.</li>
+</ul>
+<p>Each step is safe to roll back. <b>Seeding</b> means loading starting or test data.</p>
+<aside class="yours"><h4>In your setup</h4><p>Your GA4 import into Umami's Postgres was effectively a one-off backfill, done straight into production tables.</p></aside>
+</article>
+
+<article class="ch" id="replication" data-part="Databases and data" data-title="Replicas, failover and sharding">
+<p class="lead">How databases survive failures and grow beyond one machine.</p>
+<p><b>Replication</b> copies data from a <b>primary</b> (which accepts writes) to one or more <b>replicas</b>. Older docs say master/slave; modern ones say primary/replica or leader/follower.</p>
+<ul>
+<li><b>Read replicas</b> take read traffic off the primary.</li>
+<li><b>Synchronous</b> replication waits for the replica to confirm each write (safer, slower). <b>Asynchronous</b> doesn't, so a replica can briefly lag behind. That delay is <b>replication lag</b>.</li>
+<li><b>Failover</b>: promoting a replica to primary when the primary dies. Automatic failover is a key feature of managed databases.</li>
+<li><b>High availability</b> (HA): set up so a single failure doesn't cause an outage.</li>
+</ul>
+<p>When one primary can't handle the writes, you <b>shard</b> or <b>partition</b>: split data across databases by a key such as customer ID. It's powerful and painful, so most teams scale vertically for a very long time first.</p>
+<aside class="say"><h4>Say it like this</h4><p>"The dashboard reads from a replica, so numbers can lag the primary by a few seconds."</p></aside>
+</article>
+
+<article class="ch" id="pooling" data-part="Databases and data" data-title="Connection pooling">
+<p class="lead">Opening a database connection is expensive, so apps reuse a small set of them.</p>
+<p>Each connection to Postgres uses memory on the server, and Postgres typically allows only a few hundred. A <b>connection pool</b> keeps a fixed set of open connections and lends them to requests as needed.</p>
+<p>Pools live either inside the app (most database libraries have one) or as a separate proxy such as <b>PgBouncer</b> or AWS RDS Proxy.</p>
+<p>This matters most with serverless. Hundreds of short-lived function instances each opening their own connection will exhaust the database quickly. That's why serverless database providers offer pooled or HTTP-based connections, and why Cloudflare built Hyperdrive.</p>
+<p>Symptoms of pool trouble: "too many connections" errors, or requests hanging while they wait for a free connection (<b>pool exhaustion</b>).</p>
+<aside class="say"><h4>Say it like this</h4><p>"The Lambdas were exhausting Postgres connections, we put PgBouncer in front in transaction mode."</p></aside>
+</article>
+
+<article class="ch" id="caching" data-part="Databases and data" data-title="Caching and Redis">
+<p class="lead">A cache is a fast copy of something slow. The hard part is knowing when it's stale.</p>
+<p>Caches exist at every layer: the browser, the CDN, the app's memory, a shared cache server, and the database's own buffers.</p>
+<p><b>Redis</b> is the standard shared cache: an in-memory key-value store that's extremely fast. It's also used for sessions, rate-limit counters, leaderboards and simple queues. <b>Valkey</b> is an open-source fork after a licence change; <b>Memcached</b> is an older, simpler alternative.</p>
+<ul>
+<li><b>Cache-aside</b>: check the cache; on a miss, read the database and store the result. The most common pattern.</li>
+<li><b>Write-through</b>: update the cache and database together.</li>
+<li><b>Invalidation</b>: removing stale entries when data changes. Famously one of the two hard problems in computer science.</li>
+<li><b>Eviction</b>: dropping entries when memory is full, often least-recently-used (LRU).</li>
+<li><b>Cache stampede</b>: many requests miss at once and all hit the database together.</li>
+<li><b>Memoisation</b>: caching a function's result for the same inputs.</li>
+</ul>
+<aside class="say"><h4>Say it like this</h4><p>"We cache the product list in Redis with a five-minute TTL and bust it on update."</p></aside>
+</article>
+
+<article class="ch" id="queues" data-part="Databases and data" data-title="Queues, background jobs and pub/sub">
+<p class="lead">Not everything should happen while the user waits.</p>
+<p>Sending emails, generating reports, resizing images: slow work goes on a <b>queue</b>. The web request adds a <b>message</b> (the <b>producer</b>) and returns immediately; separate <b>workers</b> (the <b>consumers</b>) pick messages off and process them. This is <b>asynchronous processing</b>.</p>
+<ul>
+<li><b>Job queues</b>: BullMQ (on Redis), Sidekiq, Celery, AWS SQS, Cloudflare Queues.</li>
+<li><b>Retries</b> with <b>backoff</b> when a job fails, and a <b>dead-letter queue</b> (DLQ) for messages that keep failing.</li>
+<li><b>At-least-once delivery</b>: a message may arrive twice, so consumers must be idempotent (see the resilience chapter).</li>
+<li><b>Pub/sub</b> (publish/subscribe): one message goes to many subscribers. A <b>topic</b> is the channel.</li>
+<li><b>Event streaming</b> (Apache Kafka, AWS Kinesis): an ordered, replayable log of events at huge volume.</li>
+<li><b>Cron jobs</b> or <b>scheduled tasks</b>: time-based work.</li>
+</ul>
+<aside class="yours"><h4>In your setup</h4><p>Your WordPress deploy hook is a fire-and-forget event: WordPress doesn't wait for the build, Cloudflare queues it and works through it.</p></aside>
+</article>
+
+<article class="ch" id="object" data-part="Databases and data" data-title="Object, block and file storage">
+<p class="lead">Three kinds of storage, each suited to different data.</p>
+<ul>
+<li><b>Object storage</b> (S3, Cloudflare R2, Backblaze B2, Azure Blob): files stored as objects in <b>buckets</b>, fetched over HTTP by key. Practically unlimited, cheap, durable. Where uploads, images, backups and exports go. Files are called <b>objects</b> or <b>blobs</b>.</li>
+<li><b>Block storage</b> (AWS EBS, Hetzner Volumes): a virtual disk attached to one server. Fast, and what databases run on.</li>
+<li><b>File storage</b> (AWS EFS, NFS, SMB shares): a shared network drive that several servers mount at once. Your Synology is a file server.</li>
+</ul>
+<p>Object storage terms: <b>presigned URLs</b> give time-limited upload or download access without making a bucket public; <b>lifecycle rules</b> move old objects to cheaper <b>storage tiers</b> (like S3 Glacier) or delete them; <b>versioning</b> keeps old copies of overwritten files.</p>
+<p>Durability is quoted in nines: S3 claims 99.999999999% ("eleven nines"), meaning data loss is vanishingly unlikely.</p>
+<aside class="say"><h4>Say it like this</h4><p>"Don't store uploads on the container disk, push them to R2 with a presigned URL."</p></aside>
+</article>
+
+<article class="ch" id="backups" data-part="Databases and data" data-title="Backups, RPO and RTO">
+<p class="lead">A backup plan is defined by two numbers: how much you can lose, and how long you can be down.</p>
+<ul>
+<li><b>RPO</b> (recovery point objective): maximum acceptable data loss, in time. Nightly backups mean an RPO of up to 24 hours.</li>
+<li><b>RTO</b> (recovery time objective): maximum acceptable time to be back up.</li>
+</ul>
+<p>Techniques: <b>snapshots</b> (point-in-time disk copies), <b>logical dumps</b> (<code>pg_dump</code>), and <b>point-in-time recovery</b> (PITR), which replays the database's write-ahead log to restore to any second.</p>
+<p>The <b>3-2-1 rule</b>: three copies, on two kinds of media, one off-site. <b>Immutable</b> backups can't be changed or deleted for a set period, protecting against ransomware. <b>Disaster recovery</b> (DR) is the wider plan for losing a whole site.</p>
+<p>The rule everyone repeats: a backup you haven't restored isn't a backup. Scheduled <b>restore tests</b> are the proof.</p>
+<aside class="yours"><h4>In your setup</h4><p>Hetzner server plus nightly rsync to your NAS gives two copies with an RPO of about a day. Adding an off-site copy (like Hetzner Storage Box or R2) and occasionally restoring a volume to a test server would make it a full 3-2-1 setup.</p></aside>
+<aside class="warn"><p>Copying a live Postgres data directory with rsync can capture it mid-write. A <code>pg_dump</code> before the rsync gives a consistent copy.</p></aside>
+</article>
+
+<!-- PART 7 -->
+<article class="ch" id="authn" data-part="Security and auth" data-title="Authentication versus authorisation">
+<p class="lead">AuthN asks who you are; AuthZ asks what you're allowed to do.</p>
+<p><b>Authentication</b> (authN) verifies identity: passwords, magic links, passkeys, SSO. Adding a second factor is <b>MFA</b> or <b>2FA</b>: something you know plus something you have, such as a <b>TOTP</b> code from an authenticator app.</p>
+<p><b>Authorisation</b> (authZ) decides permissions once identity is known. Models:</p>
+<ul>
+<li><b>RBAC</b> (role-based): permissions attach to roles like admin, editor, viewer.</li>
+<li><b>ABAC</b> (attribute-based): rules use attributes, such as "managers can approve expenses under £5,000 in their own cost centre".</li>
+<li><b>ReBAC</b> (relationship-based): permissions follow relationships, like Google Docs sharing.</li>
+</ul>
+<p><b>Passkeys</b> (built on <b>WebAuthn</b>) replace passwords with device-held cryptographic keys and are becoming the default. <b>Multi-tenancy</b> means one system serves many customers (<b>tenants</b>) whose data must never mix. It's the central authZ risk in any SaaS.</p>
+<aside class="yours"><h4>In your setup</h4><p>estateportal.app has signup, 2FA and an admin area, so authN and RBAC are already in play. If it serves several estate agencies, tenant isolation is the thing to test hardest.</p></aside>
+</article>
+
+<article class="ch" id="sessions" data-part="Security and auth" data-title="Sessions, cookies, tokens and JWTs">
+<p class="lead">After login, the server needs a way to recognise you on every request.</p>
+<p><b>Session-based auth</b>: the server stores a session and gives the browser a random <b>session ID</b> in a <b>cookie</b>. Easy to revoke: delete the session.</p>
+<p><b>Token-based auth</b>: the server gives the client a signed <b>token</b> that it sends in the <code>Authorization: Bearer …</code> header. Common for APIs and mobile apps.</p>
+<p>A <b>JWT</b> (JSON Web Token, said "jot") is a popular token format: a small JSON payload (<b>claims</b>, such as user ID and expiry) plus a signature. Anyone can read it; only the issuer can create a valid one. Because the server doesn't store it, it's hard to revoke, so JWTs are kept short-lived and paired with a longer-lived <b>refresh token</b>.</p>
+<p>Cookie flags to know: <code>HttpOnly</code> (JavaScript can't read it), <code>Secure</code> (HTTPS only), <code>SameSite</code> (limits cross-site sending, which blocks CSRF).</p>
+<aside class="say"><h4>Say it like this</h4><p>"Access tokens are fifteen-minute JWTs; the refresh token sits in an HttpOnly cookie."</p></aside>
+</article>
+
+<article class="ch" id="oauth" data-part="Security and auth" data-title="OAuth, OpenID Connect and SSO">
+<p class="lead">OAuth lets one app access another on your behalf; OIDC adds "and here's who logged in".</p>
+<p><b>OAuth 2.0</b> is about delegated <em>access</em>. When an app asks to "read your Google Calendar", you log in at Google, approve specific <b>scopes</b>, and Google gives the app an <b>access token</b>. The app never sees your password. Roles: the <b>resource owner</b> (you), the <b>client</b> (the app), the <b>authorisation server</b> (Google), the <b>resource server</b> (the Calendar API).</p>
+<p><b>OpenID Connect</b> (OIDC) sits on top of OAuth and adds an <b>ID token</b> describing who the user is. "Sign in with Google" is OIDC.</p>
+<p><b>SSO</b> (single sign-on) means one login across many apps. Enterprises run an <b>identity provider</b> (<b>IdP</b>) such as Microsoft Entra ID, Okta or Google Workspace. Older enterprise SSO uses <b>SAML</b> (XML-based); newer uses OIDC. <b>SCIM</b> automatically creates and removes user accounts in apps when HR adds or removes staff.</p>
+<p>Auth platforms like Auth0, Clerk, WorkOS and Supabase Auth handle all this so you don't build it yourself.</p>
+<aside class="say"><h4>Say it like this</h4><p>"Enterprise customers will want SAML SSO and SCIM before they sign."</p></aside>
+</article>
+
+<article class="ch" id="secrets" data-part="Security and auth" data-title="Secrets management">
+<p class="lead">A secret is any value that grants access: API keys, passwords, tokens, private keys.</p>
+<p>The rules:</p>
+<ul>
+<li>Never commit secrets to Git, even in private repos. Git history keeps them forever.</li>
+<li>Inject them at runtime as environment variables or mounted files.</li>
+<li>Store them in a <b>secrets manager</b>: HashiCorp Vault, AWS Secrets Manager, Doppler, Infisical, 1Password, or your CI or platform's encrypted secrets store.</li>
+<li><b>Rotate</b> them regularly, and immediately after any leak.</li>
+<li>Scope each one to the least access it needs.</li>
+</ul>
+<p><code>.env</code> files are fine locally but belong in <code>.gitignore</code>. <b>Secret scanning</b> (GitHub has it built in) catches leaks in commits. A <b>leaked credential</b> should be treated as compromised the moment it's public, since bots scan GitHub within minutes.</p>
+<aside class="yours"><h4>In your setup</h4><p>Your Cloudflare deploy hook URL living in <code>functions.php</code> is a secret in code. Moving it to <code>wp-config.php</code> or an environment variable in Coolify keeps it out of the theme files.</p></aside>
+</article>
+
+<article class="ch" id="zero-trust" data-part="Security and auth" data-title="Least privilege, zero trust and hardening">
+<p class="lead">Assume something will be breached, and limit what it can reach.</p>
+<ul>
+<li><b>Least privilege</b>: every person and service gets the minimum access needed.</li>
+<li><b>Blast radius</b>: how much damage one compromised part can do. Least privilege shrinks it.</li>
+<li><b>Defence in depth</b>: several independent layers, so one failure isn't fatal.</li>
+<li><b>Zero trust</b>: being inside the network grants nothing; every request is authenticated and authorised. Tools like Tailscale, Cloudflare Access and Google BeyondCorp implement it.</li>
+<li><b>Attack surface</b>: everything an attacker could reach. Closing ports and removing unused services reduces it.</li>
+<li><b>Hardening</b>: locking a server down, such as disabling password SSH, running services as non-root users, and applying updates promptly.</li>
+<li><b>Patch management</b> and <b>CVEs</b>: public IDs for known vulnerabilities (like CVE-2024-3094), rated by <b>CVSS</b> score.</li>
+</ul>
+<aside class="yours"><h4>In your setup</h4><p>You SSH in as root. Hardened setups use a named user with sudo and disable root login, so a single stolen key does less damage and actions are attributable.</p></aside>
+</article>
+
+<article class="ch" id="attacks" data-part="Security and auth" data-title="Attacks everyone names">
+<p class="lead">The shorthand security people use, in one place.</p>
+<div class="tbl"><table>
+<tr><th>Name</th><th>What happens</th><th>Main defence</th></tr>
+<tr><td>SQL injection</td><td>User input is run as database code.</td><td>Parameterised queries.</td></tr>
+<tr><td>XSS</td><td>Attacker's script runs in other users' browsers.</td><td>Escape output, Content Security Policy.</td></tr>
+<tr><td>CSRF</td><td>A malicious site triggers actions using your logged-in cookies.</td><td>SameSite cookies, CSRF tokens.</td></tr>
+<tr><td>SSRF</td><td>The server is tricked into fetching internal URLs.</td><td>Allow-lists for outbound requests.</td></tr>
+<tr><td>IDOR</td><td>Changing an ID in a URL shows someone else's data.</td><td>Check ownership on every request.</td></tr>
+<tr><td>DDoS</td><td>Flooding a service with traffic.</td><td>CDN or WAF, rate limiting.</td></tr>
+<tr><td>Credential stuffing</td><td>Leaked passwords tried on your login.</td><td>MFA, rate limits, breach checks.</td></tr>
+<tr><td>Supply chain attack</td><td>A compromised dependency or build tool.</td><td>Lockfiles, pinned versions, SBOMs.</td></tr>
+<tr><td>Phishing</td><td>Tricking people into giving credentials.</td><td>Passkeys, training.</td></tr>
+</table></div>
+<p>The <b>OWASP Top 10</b> is the standard list of web app risks. An <b>SBOM</b> (software bill of materials) is an inventory of every component in your software.</p>
+</article>
+
+<article class="ch" id="cors" data-part="Security and auth" data-title="CORS and the same-origin policy">
+<p class="lead">The browser security rule that front-end developers meet most often, and the header that relaxes it.</p>
+<p>An <b>origin</b> is scheme plus domain plus port: <code>https://farhan.app</code> and <code>https://api.farhan.app</code> are different origins. The <b>same-origin policy</b> stops JavaScript on one origin from reading responses from another.</p>
+<p><b>CORS</b> (cross-origin resource sharing) lets a server opt in: it sends headers like <code>Access-Control-Allow-Origin: https://farhan.app</code> to say which origins may read its responses. For some requests the browser first sends an <code>OPTIONS</code> <b>preflight</b> to ask permission.</p>
+<p>Key facts:</p>
+<ul>
+<li>CORS is enforced by browsers only. <code>curl</code> and servers ignore it, so it isn't an API security measure.</li>
+<li>A CORS error is fixed on the <em>server</em> being called, not in your front-end code.</li>
+<li><code>Allow-Origin: *</code> can't be combined with cookies or credentials.</li>
+</ul>
+<aside class="say"><h4>Say it like this</h4><p>"It's a CORS issue, the API isn't returning the preflight headers for our staging domain."</p></aside>
+</article>
+
+<article class="ch" id="compliance" data-part="Security and auth" data-title="Compliance: SOC 2, ISO 27001 and GDPR">
+<p class="lead">Security frameworks are audits of controls, a world you already know from finance.</p>
+<ul>
+<li><b>SOC 2</b>: a US-origin audit report on controls around security, availability and confidentiality. <b>Type I</b> checks controls are designed properly at one date; <b>Type II</b> checks they operated over a period (usually 6 to 12 months). B2B customers routinely ask for it.</li>
+<li><b>ISO 27001</b>: the international standard for an information security management system, more common in the UK and Europe. Certification rather than an attestation report.</li>
+<li><b>Cyber Essentials</b>: the UK government-backed baseline scheme, often required for public sector suppliers like TfL.</li>
+<li><b>UK GDPR</b>: data protection law. Terms include <b>data controller</b>, <b>data processor</b>, <b>DPA</b> (data processing agreement), <b>DPIA</b> (impact assessment) and <b>subject access requests</b>.</li>
+<li><b>PCI DSS</b>: rules for handling card data. Most companies avoid it by letting Stripe or similar hold the card.</li>
+</ul>
+<p>A <b>penetration test</b> (pen test) is paid ethical hacking. A <b>vulnerability disclosure policy</b> or <b>bug bounty</b> invites outsiders to report issues.</p>
+<aside class="say"><h4>Say it like this</h4><p>"We're SOC 2 Type II and Cyber Essentials Plus; I can share the report under NDA."</p></aside>
+</article>
+<!-- PART 8 -->
+<article class="ch" id="three-pillars" data-part="Observability" data-title="Logs, metrics and traces">
+<p class="lead">The three kinds of evidence engineers use to understand a running system.</p>
+<ul>
+<li><b>Logs</b>: timestamped records of events. "User 42 logged in." Best as <b>structured logs</b> (JSON with fields) so they can be searched and filtered. Levels: debug, info, warn, error.</li>
+<li><b>Metrics</b>: numbers over time. Requests per second, CPU usage, error rate. Cheap to store, ideal for dashboards and alerts. Watch out for <b>cardinality</b>: a metric split by user ID creates millions of series.</li>
+<li><b>Traces</b>: the path of a single request through many services, broken into timed <b>spans</b>. They show where time went, for example 800ms of a 900ms request spent in one database call.</li>
+</ul>
+<p><b>Observability</b> is the ability to answer new questions about your system from this data, without shipping new code. Monitoring checks known problems; observability helps with unknown ones.</p>
+<p><b>OpenTelemetry</b> (OTel) is the open standard for collecting all three. Tools: Grafana with Prometheus, Loki and Tempo; Datadog; New Relic; Honeycomb; Sentry for errors; Better Stack.</p>
+<aside class="say"><h4>Say it like this</h4><p>"Metrics show p99 latency spiking, pull a trace from that window to see which span is slow."</p></aside>
+</article>
+
+<article class="ch" id="monitoring" data-part="Observability" data-title="Monitoring, alerting and dashboards">
+<p class="lead">Dashboards are for looking; alerts are for being told.</p>
+<p>Two classic checklists for what to watch:</p>
+<ul>
+<li><b>The four golden signals</b> (from Google SRE): latency, traffic, errors, saturation.</li>
+<li><b>RED</b> for services: rate, errors, duration. <b>USE</b> for resources: utilisation, saturation, errors.</li>
+</ul>
+<p><b>Latency percentiles</b>: <b>p50</b> is the median; <b>p95</b> and <b>p99</b> mean 95% or 99% of requests were faster. Averages hide the slow tail that users actually feel, so engineers talk in percentiles.</p>
+<p>Alerting terms: a <b>threshold</b> triggers an alert; <b>paging</b> means waking someone up (via PagerDuty, Opsgenie or incident.io); <b>alert fatigue</b> sets in when too many alerts fire and people start ignoring them. Good practice is to alert on <b>symptoms</b> users feel (errors, slowness), not every <b>cause</b> (high CPU).</p>
+<p><b>Synthetic monitoring</b> runs scripted checks from outside, like a fake user logging in every five minutes. <b>RUM</b> (real user monitoring) measures what actual visitors experience, including Core Web Vitals.</p>
+<aside class="say"><h4>Say it like this</h4><p>"p50 is fine but p99 doubled after the deploy, some queries are hitting the cold path."</p></aside>
+</article>
+
+<article class="ch" id="health" data-part="Observability" data-title="Health checks and heartbeats">
+<p class="lead">Small endpoints and pings that let machines judge whether a service is alive.</p>
+<p>A <b>health check</b> is an endpoint like <code>/health</code> or <code>/healthz</code> that returns 200 when the service is fine. Load balancers and orchestrators call it constantly.</p>
+<p>Kubernetes separates the questions:</p>
+<ul>
+<li><b>Liveness</b>: is the process stuck? If not live, restart it.</li>
+<li><b>Readiness</b>: can it take traffic right now? If not ready, stop sending requests but don't restart.</li>
+<li><b>Startup</b>: has it finished booting?</li>
+</ul>
+<p>A <b>shallow</b> check just confirms the process responds. A <b>deep</b> check also tests dependencies like the database, which is more informative but can cause a whole fleet to be marked unhealthy when one shared dependency blips.</p>
+<p><b>Push</b> monitoring reverses the direction: the service sends a <b>heartbeat</b> on schedule, and silence triggers the alert. It suits things you can't reach from outside, like cron jobs. This pattern is sometimes called a <b>dead man's switch</b>.</p>
+<aside class="yours"><h4>In your setup</h4><p>Uptime Kuma does both: pull checks against your sites, and a push heartbeat from the NAS. A heartbeat at the end of your nightly rsync would tell you if a backup silently stopped running.</p></aside>
+</article>
+
+<article class="ch" id="slo" data-part="Observability" data-title="SLAs, SLOs, SLIs and error budgets">
+<p class="lead">Three nested ideas for putting a number on reliability.</p>
+<ul>
+<li><b>SLI</b> (indicator): what you measure. "Percentage of requests that succeed in under 300ms."</li>
+<li><b>SLO</b> (objective): the internal target. "99.9% over 30 days."</li>
+<li><b>SLA</b> (agreement): the contractual promise to customers, with <b>service credits</b> if missed. Always looser than the SLO so you have a margin.</li>
+</ul>
+<p>Availability in "nines":</p>
+<div class="tbl"><table>
+<tr><th>Target</th><th>Allowed downtime per 30 days</th></tr>
+<tr><td>99% (two nines)</td><td>about 7.2 hours</td></tr>
+<tr><td>99.9% (three nines)</td><td>about 43 minutes</td></tr>
+<tr><td>99.99% (four nines)</td><td>about 4.3 minutes</td></tr>
+<tr><td>99.999% (five nines)</td><td>about 26 seconds</td></tr>
+</table></div>
+<p>The gap between 100% and the SLO is the <b>error budget</b>. While budget remains, teams ship quickly; when it's spent, they slow down and fix reliability. It turns an argument into a number. <b>Burn rate</b> is how fast the budget is being used.</p>
+<aside class="yours"><h4>In your setup</h4><p>This will feel familiar from TfL contracts: an SLA with service credits is structurally the same as a performance regime with deductions for missed mileage or punctuality.</p></aside>
+</article>
+
+<article class="ch" id="incidents" data-part="Observability" data-title="On-call, incidents and postmortems">
+<p class="lead">How teams respond when something breaks, and learn from it afterwards.</p>
+<ul>
+<li><b>On-call</b>: a rota of engineers reachable out of hours. A <b>rotation</b> or <b>schedule</b> assigns primary and secondary.</li>
+<li><b>Incident</b>: an unplanned disruption. Graded by <b>severity</b>: <b>SEV1</b> or <b>P1</b> is critical (major outage), down to SEV4 for minor issues.</li>
+<li><b>Incident commander</b>: coordinates the response; others investigate. A <b>status page</b> updates customers.</li>
+<li><b>Mitigate</b> first (stop the bleeding, often by rolling back), then find the <b>root cause</b>.</li>
+<li><b>MTTD</b>, <b>MTTA</b>, <b>MTTR</b>: mean time to detect, acknowledge, and resolve or recover.</li>
+<li><b>Runbook</b> or <b>playbook</b>: step-by-step instructions for known problems.</li>
+<li><b>Postmortem</b> (or incident review, retrospective): a written account of what happened, why, and follow-up <b>action items</b>. <b>Blameless</b> postmortems focus on systems, not individuals.</li>
+</ul>
+<p><b>Chaos engineering</b> deliberately breaks things in controlled ways to check resilience. <b>Game days</b> are rehearsed incidents.</p>
+<aside class="say"><h4>Say it like this</h4><p>"Declaring a SEV2, I'm IC. We've rolled back and error rates are recovering, postmortem on Thursday."</p></aside>
+</article>
+
+<!-- PART 9 -->
+<article class="ch" id="monolith" data-part="System design" data-title="Monoliths, microservices and in between">
+<p class="lead">The biggest architecture debate, which is really about team size.</p>
+<p>A <b>monolith</b> is one application deployed as a single unit. Simple to build, test and deploy. Most successful products start this way. A <b>modular monolith</b> keeps one deployment but enforces clean internal boundaries.</p>
+<p><b>Microservices</b> split the system into many small services, each owning its data and deployed independently, talking over the network. Benefits: teams work and deploy independently, services scale separately. Costs: network failures, distributed debugging, data consistency, much more infrastructure.</p>
+<p>Related terms:</p>
+<ul>
+<li><b>Distributed monolith</b>: microservices so tangled they must deploy together. The worst of both.</li>
+<li><b>Service boundaries</b> and <b>bounded contexts</b> (from domain-driven design, <b>DDD</b>): where to cut.</li>
+<li><b>Conway's law</b>: systems end up mirroring the communication structure of the organisation that builds them.</li>
+<li><b>Strangler fig</b>: replacing an old system gradually by routing features to new code one piece at a time.</li>
+</ul>
+<aside class="say"><h4>Say it like this</h4><p>"We're twelve engineers, a modular monolith is plenty. Microservices would be solving a people problem we don't have."</p></aside>
+</article>
+
+<article class="ch" id="scaling" data-part="System design" data-title="Scaling up, scaling out, and statelessness">
+<p class="lead">Two ways to handle more load, and the property that makes the second one possible.</p>
+<p><b>Vertical scaling</b> (scaling up): a bigger machine. More CPU, more RAM. Simple, no code changes, but has a ceiling and a single point of failure.</p>
+<p><b>Horizontal scaling</b> (scaling out): more machines behind a load balancer. No real ceiling and more resilient, but the app must be <b>stateless</b>.</p>
+<p><b>Stateless</b> means any instance can handle any request, because nothing important lives in one instance's memory or disk. Sessions go to Redis or a database, uploads to object storage. <b>Stateful</b> components (databases, caches) are scaled differently and more carefully.</p>
+<p><b>Autoscaling</b> adds and removes instances automatically based on metrics such as CPU or queue length. <b>Elasticity</b> is the ability to grow and shrink with demand. <b>Bottleneck</b>: whichever component limits the whole system, often the database.</p>
+<aside class="yours"><h4>In your setup</h4><p>Your VPS scales vertically: upgrading the Hetzner plan is scaling up. Your Astro site on Cloudflare scales horizontally for free, because static files are perfectly stateless.</p></aside>
+</article>
+
+<article class="ch" id="apis" data-part="System design" data-title="REST, GraphQL, gRPC and API design">
+<p class="lead">The main styles services use to talk to each other.</p>
+<p><b>REST</b>: resources at URLs, acted on with HTTP methods. <code>GET /posts/12</code>, <code>POST /posts</code>. The default for public APIs. Usually JSON. Documented with an <b>OpenAPI</b> (formerly Swagger) specification.</p>
+<p><b>GraphQL</b>: one endpoint where the client sends a query describing exactly which fields it wants. Avoids over-fetching and many round trips; adds complexity and caching challenges. WordPress has it via WPGraphQL.</p>
+<p><b>gRPC</b>: fast binary protocol using <b>Protocol Buffers</b>, popular between internal microservices.</p>
+<p><b>tRPC</b>: type-safe calls between a TypeScript front end and back end, no schema file needed.</p>
+<p>API design terms: <b>endpoint</b>, <b>payload</b>, <b>pagination</b> (offset-based versus cursor-based), <b>versioning</b> (<code>/v1/</code>), <b>breaking change</b>, <b>API gateway</b> (a front door handling auth, rate limits and routing for many APIs), <b>SDK</b> (a client library wrapping an API), and <b>contract</b> (the agreed shape of requests and responses).</p>
+<aside class="yours"><h4>In your setup</h4><p>Astro pulling posts from the WordPress REST API at build time is a classic headless pattern: the CMS is just an API provider.</p></aside>
+</article>
+
+<article class="ch" id="realtime" data-part="System design" data-title="Webhooks, polling and websockets">
+<p class="lead">Three ways to find out that something changed somewhere else.</p>
+<ul>
+<li><b>Polling</b>: ask repeatedly, "anything new?" Simple, wasteful, slow to notice. <b>Long polling</b> holds the request open until there's news.</li>
+<li><b>Webhooks</b>: the other system calls <em>your</em> URL when something happens. Stripe calling your server on payment is the textbook case. Receivers should verify a <b>signature</b>, respond quickly, and handle duplicates.</li>
+<li><b>WebSockets</b>: a persistent two-way connection for real-time features like chat or live dashboards.</li>
+<li><b>Server-sent events</b> (SSE): one-way streaming from server to browser. How AI chat responses usually stream in.</li>
+</ul>
+<p>Webhooks are sometimes called "reverse APIs" or "HTTP callbacks". A <b>deploy hook</b> is simply a webhook that triggers a build.</p>
+<aside class="yours"><h4>In your setup</h4><p>Your <code>functions.php</code> watching post status and calling Cloudflare is WordPress <em>sending</em> a webhook. Payload CMS's "native webhooks", which you researched, is the same idea without custom code.</p></aside>
+</article>
+
+<article class="ch" id="resilience" data-part="System design" data-title="Timeouts, retries, idempotency and rate limits">
+<p class="lead">The defensive habits that stop one slow or failing service from taking everything down.</p>
+<ul>
+<li><b>Timeouts</b>: never wait forever for another service. Without them, requests pile up and exhaust resources.</li>
+<li><b>Retries</b> with <b>exponential backoff</b> and <b>jitter</b>: try again after 1s, 2s, 4s, with some randomness so clients don't all retry at the same instant (a <b>thundering herd</b>).</li>
+<li><b>Idempotency</b>: doing an operation twice has the same effect as once. Essential when retrying anything that changes data. APIs accept an <b>idempotency key</b> so a retried payment isn't charged twice.</li>
+<li><b>Rate limiting</b>: capping requests per user or IP per time window, returning HTTP 429. Algorithms: <b>token bucket</b>, <b>sliding window</b>. <b>Throttling</b> slows rather than rejects.</li>
+<li><b>Circuit breaker</b>: after repeated failures, stop calling a service for a while and fail fast instead.</li>
+<li><b>Graceful degradation</b>: when a dependency fails, offer a reduced experience rather than an error page.</li>
+<li><b>Backpressure</b>: signalling upstream to slow down when you're overwhelmed.</li>
+</ul>
+<aside class="say"><h4>Say it like this</h4><p>"The webhook handler needs to be idempotent, Stripe retries on timeout and we double-credited two accounts."</p></aside>
+</article>
+
+<article class="ch" id="availability" data-part="System design" data-title="Redundancy and single points of failure">
+<p class="lead">Reliability comes from having spares, and knowing which parts don't have one.</p>
+<ul>
+<li><b>Single point of failure</b> (SPOF): one component whose failure takes the whole system down.</li>
+<li><b>Redundancy</b>: duplicate components so one can fail. <b>N+1</b> means one more than you need.</li>
+<li><b>Active-active</b>: all copies serve traffic. <b>Active-passive</b>: a standby waits to take over.</li>
+<li><b>Fault tolerance</b>: continuing to work through failures. <b>Fault isolation</b>: containing a failure to one area (also called <b>bulkheads</b>, after ship compartments).</li>
+<li><b>Cascading failure</b>: one overloaded part pushes load onto others until they all fall over.</li>
+<li><b>Dependencies</b>: your uptime can't exceed that of the services you rely on. If two services you depend on are each 99.9%, your ceiling is about 99.8%.</li>
+</ul>
+<aside class="yours"><h4>In your setup</h4><p>The single VPS is a SPOF for everything on it: Umami, Uptime Kuma and the WordPress CMS. farhan.app itself survives because the static build lives on Cloudflare. It's a sensible trade-off for personal projects, and worth knowing how to say.</p></aside>
+</article>
+
+<article class="ch" id="consistency" data-part="System design" data-title="Consistency trade-offs and CAP">
+<p class="lead">Once data lives in more than one place, you choose between always-correct and always-available.</p>
+<p><b>Strong consistency</b>: every read sees the latest write. <b>Eventual consistency</b>: copies may briefly disagree but will converge. DNS, CDN caches and read replicas are all eventually consistent.</p>
+<p>The <b>CAP theorem</b> says that during a network <b>partition</b> (some machines can't reach others), a distributed system must choose between <b>consistency</b> (refuse requests it can't answer correctly) and <b>availability</b> (answer anyway, possibly with stale data). Banks lean to consistency; social feeds lean to availability.</p>
+<p>Other terms: <b>read-your-writes</b> (at least you see your own changes immediately), <b>race condition</b> (outcome depends on timing), <b>optimistic locking</b> (detect conflicting edits with a version number), <b>distributed transaction</b> and the <b>saga</b> pattern (a chain of steps with compensating actions if one fails, since a single database transaction can't span services).</p>
+<aside class="say"><h4>Say it like this</h4><p>"The count is eventually consistent, the search index updates a few seconds after the write."</p></aside>
+</article>
+
+<article class="ch" id="events" data-part="System design" data-title="Event-driven architecture">
+<p class="lead">Instead of services calling each other, they announce what happened and let others react.</p>
+<p>In a <b>request-driven</b> system, the order service calls the email service, the inventory service and the analytics service directly. In an <b>event-driven</b> system, the order service publishes an <b>event</b> ("OrderPlaced") and each interested service subscribes. The publisher doesn't know or care who's listening.</p>
+<p>This <b>decouples</b> services: new features can react to existing events without changing the original code. The cost is that flows become harder to follow and debug.</p>
+<ul>
+<li><b>Event bus</b> or <b>broker</b>: the infrastructure carrying events (Kafka, RabbitMQ, AWS EventBridge).</li>
+<li><b>Event sourcing</b>: storing every change as an event and deriving current state from the full history. Closely resembles a general ledger rebuilt from journals.</li>
+<li><b>CQRS</b>: separate models for writing and reading data.</li>
+<li><b>Outbox pattern</b>: save the event in the same database transaction as the data change, then publish it, so neither is lost.</li>
+<li><b>Choreography</b> (services react independently) versus <b>orchestration</b> (a coordinator directs each step).</li>
+</ul>
+<aside class="say"><h4>Say it like this</h4><p>"Billing just subscribes to the SubscriptionChanged event, no need to touch the accounts service."</p></aside>
+</article>
+<!-- PART 10 -->
+<article class="ch" id="agile" data-part="Team jargon and process" data-title="Agile, sprints and tickets">
+<p class="lead">How engineering work is planned and tracked.</p>
+<ul>
+<li><b>Agile</b>: working in short cycles with frequent feedback, rather than one big plan (<b>waterfall</b>).</li>
+<li><b>Scrum</b>: an Agile framework with fixed <b>sprints</b> (usually two weeks), <b>sprint planning</b>, a daily <b>stand-up</b>, a <b>sprint review</b> and a <b>retro</b> (retrospective).</li>
+<li><b>Kanban</b>: continuous flow across a board (to do, in progress, done), with <b>WIP limits</b> on work in progress.</li>
+<li><b>Backlog</b>: the prioritised list of work. <b>Grooming</b> or <b>refinement</b> keeps it tidy.</li>
+<li><b>Ticket</b>, <b>issue</b> or <b>story</b>: one unit of work, often in Jira or Linear. An <b>epic</b> groups related stories.</li>
+<li><b>Story points</b>: relative effort estimates. <b>Velocity</b>: points completed per sprint.</li>
+<li><b>Acceptance criteria</b> and <b>definition of done</b>: when a ticket counts as finished.</li>
+<li><b>Spike</b>: a time-boxed investigation to reduce uncertainty.</li>
+<li><b>MVP</b>: minimum viable product. <b>PoC</b>: proof of concept.</li>
+</ul>
+<aside class="say"><h4>Say it like this</h4><p>"Let's do a spike this sprint before we point the migration epic."</p></aside>
+</article>
+
+<article class="ch" id="design-docs" data-part="Team jargon and process" data-title="RFCs, ADRs and design docs">
+<p class="lead">How engineering teams decide things in writing.</p>
+<ul>
+<li><b>Design doc</b> or <b>tech spec</b>: describes a proposed system before it's built, covering goals, non-goals, options considered and the chosen approach.</li>
+<li><b>RFC</b> (request for comments): a design doc circulated for feedback. Borrowed from the documents that define internet standards.</li>
+<li><b>ADR</b> (architecture decision record): a short, permanent note of one decision, its context and consequences. Stored in the repo so future engineers know <em>why</em>.</li>
+<li><b>PRD</b> (product requirements document): the product side's "what and why", which engineering responds to with a design doc.</li>
+<li><b>Trade-off</b>: the word that should appear in every one of these documents.</li>
+<li><b>Non-functional requirements</b> (NFRs): performance, security, availability, cost. The "-ilities": scalability, maintainability, observability.</li>
+</ul>
+<aside class="yours"><h4>In your setup</h4><p>Your note on Payload versus WordPress ("migration not justified unless WordPress becomes a maintenance burden") is an ADR in all but name. Writing those down in a <code>docs/adr/</code> folder is a small habit that reads as very senior.</p></aside>
+</article>
+
+<article class="ch" id="slang" data-part="Team jargon and process" data-title="Everyday engineer slang">
+<p class="lead">The informal words you'll hear in Slack and meetings.</p>
+<div class="tbl"><table>
+<tr><th>Term</th><th>Meaning</th></tr>
+<tr><td>LGTM</td><td>"Looks good to me." An approval.</td></tr>
+<tr><td>Nit</td><td>A minor, optional review comment.</td></tr>
+<tr><td>Ship / ship it</td><td>Release.</td></tr>
+<tr><td>Prod</td><td>Production.</td></tr>
+<tr><td>Hotfix</td><td>An urgent fix straight to production.</td></tr>
+<tr><td>Tech debt</td><td>Shortcuts that make future work slower. Taken on deliberately or not.</td></tr>
+<tr><td>Greenfield / brownfield</td><td>Starting fresh versus working within existing systems.</td></tr>
+<tr><td>Legacy</td><td>Old code still in use, often with no tests or original authors.</td></tr>
+<tr><td>Bikeshedding</td><td>Arguing about trivial details while ignoring hard ones.</td></tr>
+<tr><td>Yak shaving</td><td>A chain of side tasks needed before the real task.</td></tr>
+<tr><td>Footgun</td><td>A feature that makes it easy to hurt yourself.</td></tr>
+<tr><td>Dogfooding</td><td>Using your own product internally.</td></tr>
+<tr><td>Happy path / edge case</td><td>The normal flow versus unusual inputs.</td></tr>
+<tr><td>Boilerplate</td><td>Repetitive setup code.</td></tr>
+<tr><td>Rubber ducking</td><td>Explaining a problem out loud to find the answer.</td></tr>
+<tr><td>Works on my machine</td><td>Environment-specific bug, usually config or versions.</td></tr>
+<tr><td>Blast radius</td><td>How much a failure or change could affect.</td></tr>
+<tr><td>Toil</td><td>Manual, repetitive operational work.</td></tr>
+<tr><td>Bus factor</td><td>How many people could leave before a project stalls.</td></tr>
+<tr><td>Vendor lock-in</td><td>Being hard to move away from a provider.</td></tr>
+<tr><td>Build vs buy</td><td>Make it yourself or pay for a product.</td></tr>
+<tr><td>Heisenbug</td><td>A bug that disappears when you try to observe it.</td></tr>
+</table></div>
+</article>
+
+<article class="ch" id="mixups" data-part="Team jargon and process" data-title="Terms that are often mixed up">
+<p class="lead">Pairs that sound similar but mean different things. Getting these right is where credibility shows.</p>
+<div class="tbl"><table>
+<tr><th>Often confused</th><th>The difference</th></tr>
+<tr><td>Workflow vs integration</td><td>A GitHub workflow is automation in your repo. An integration is a connected external service.</td></tr>
+<tr><td>Deploy vs release</td><td>Deploying puts code on servers; releasing makes a feature available to users.</td></tr>
+<tr><td>Continuous delivery vs deployment</td><td>Ready to release on demand versus released automatically.</td></tr>
+<tr><td>Authentication vs authorisation</td><td>Who you are versus what you may do.</td></tr>
+<tr><td>Latency vs throughput</td><td>How long one request takes versus how many are handled per second.</td></tr>
+<tr><td>Availability vs durability</td><td>Can I use it now, versus is my data safe long term.</td></tr>
+<tr><td>Backup vs replica</td><td>A replica copies mistakes instantly; only a backup lets you go back in time.</td></tr>
+<tr><td>Container vs image</td><td>A running instance versus the packaged template.</td></tr>
+<tr><td>Ingress (networking) vs Ingress (Kubernetes)</td><td>Inbound traffic in general versus the K8s routing resource.</td></tr>
+<tr><td>Proxy vs load balancer</td><td>Overlapping; a load balancer's defining job is spreading traffic across copies.</td></tr>
+<tr><td>Encryption vs hashing</td><td>Encryption is reversible with a key; hashing is one-way (how passwords are stored).</td></tr>
+<tr><td>Library vs framework</td><td>You call a library; a framework calls your code.</td></tr>
+<tr><td>Registrar vs DNS host</td><td>Where the domain is bought versus where its records are served.</td></tr>
+<tr><td>Uptime vs SLO</td><td>A measurement versus a target for it.</td></tr>
+</table></div>
+</article>
+
+<article class="ch" id="talk" data-part="Team jargon and process" data-title="Describing your own setup like an engineer">
+<p class="lead">Putting it together: the same system, said three ways.</p>
+<p>Engineers describe systems from the outside in, naming each hop and its responsibility. Here's your own setup at three levels of detail.</p>
+<p><b>The one-liner:</b></p>
+<aside class="say"><p>"It's a headless WordPress feeding a static Astro site on Cloudflare Pages, with a self-hosted PaaS on a Hetzner box for the stateful bits."</p></aside>
+<p><b>The thirty-second version:</b></p>
+<aside class="say"><p>"WordPress runs in Docker on a Hetzner VPS managed by Coolify, with Traefik doing TLS and host-based routing. It's locked down to the API only. On publish, a hook triggers a Cloudflare Pages build, so the public site is fully static on the edge and doesn't depend on the VPS being up. Analytics and uptime monitoring are self-hosted on the same box."</p></aside>
+<p><b>The ops answer, if someone asks about resilience:</b></p>
+<aside class="say"><p>"The VPS is a single point of failure, but only for the CMS and internal tools, not the live site. SSH is only reachable over Tailscale. Volumes are rsynced nightly to a NAS, so RPO is about a day. Next steps would be an off-site copy, consistent database dumps, and defining the server in Terraform so I can rebuild it quickly."</p></aside>
+<p>Notice the pattern: what it is, where it runs, how traffic reaches it, what happens when it fails, and what you'd improve. That structure works for any system.</p>
+</article>
+
+<!-- GLOSSARY -->
+<article class="ch" id="glossary" data-part="Reference" data-title="Glossary">
+<p class="lead">Quick definitions. Filter to jump to a term.</p>
+<input class="search gloss-filter" id="gloss-filter" type="search" placeholder="Filter terms" aria-label="Filter glossary">
+<dl class="gloss" id="gloss">
+<dt>ACME</dt><dd>Protocol used to request and renew TLS certificates automatically.</dd>
+<dt>API gateway</dt><dd>Front door for APIs that handles routing, auth and rate limits.</dd>
+<dt>Artifact</dt><dd>A file produced by a build, ready to deploy or download.</dd>
+<dt>Autoscaling</dt><dd>Adding or removing instances automatically based on load.</dd>
+<dt>Availability zone</dt><dd>An isolated data centre group within a cloud region.</dd>
+<dt>Backoff</dt><dd>Waiting progressively longer between retries.</dd>
+<dt>Bastion host</dt><dd>A hardened server used as the gateway into a private network.</dd>
+<dt>Blue-green</dt><dd>Deploy strategy running old and new side by side, then switching traffic.</dd>
+<dt>Canary</dt><dd>Releasing to a small share of traffic first.</dd>
+<dt>CDN</dt><dd>Network of edge servers caching content near users.</dd>
+<dt>CIDR</dt><dd>Notation for IP address ranges, like 10.0.0.0/16.</dd>
+<dt>Circuit breaker</dt><dd>Stops calling a failing dependency for a while.</dd>
+<dt>Cold start</dt><dd>Delay when a serverless function starts from nothing.</dd>
+<dt>Container</dt><dd>An isolated process sharing the host's kernel.</dd>
+<dt>Control plane / data plane</dt><dd>The part that manages configuration versus the part that carries real traffic.</dd>
+<dt>Cron</dt><dd>Time-based job scheduler, and its schedule syntax.</dd>
+<dt>Daemon</dt><dd>A background process on a server, often ending in d (sshd, dockerd).</dd>
+<dt>Drift</dt><dd>Live systems no longer matching their definition in code.</dd>
+<dt>Egress</dt><dd>Outbound traffic, and the fees clouds charge for it.</dd>
+<dt>Ephemeral</dt><dd>Short-lived and disposable, such as preview environments or container disks.</dd>
+<dt>Failover</dt><dd>Switching to a standby when the primary fails.</dd>
+<dt>Fan-out</dt><dd>One event triggering many parallel tasks.</dd>
+<dt>Hypervisor</dt><dd>Software that runs virtual machines.</dd>
+<dt>Idempotent</dt><dd>Safe to repeat; the result is the same.</dd>
+<dt>Immutable infrastructure</dt><dd>Replacing servers rather than modifying them in place.</dd>
+<dt>Ingress</dt><dd>Inbound traffic; in Kubernetes, the HTTP routing resource.</dd>
+<dt>Kernel</dt><dd>The core of an operating system, shared by containers on a host.</dd>
+<dt>Latency</dt><dd>Time for one request to complete.</dd>
+<dt>Load balancer</dt><dd>Distributes traffic across several backends.</dd>
+<dt>Mesh VPN</dt><dd>A VPN where devices connect directly to each other, like Tailscale.</dd>
+<dt>Middleware</dt><dd>Code that runs between receiving a request and handling it, such as auth checks.</dd>
+<dt>Multi-tenant</dt><dd>One system serving many customers with separated data.</dd>
+<dt>Namespace</dt><dd>An isolating boundary for names or resources.</dd>
+<dt>Observability</dt><dd>Understanding a system's internals from its outputs.</dd>
+<dt>Origin</dt><dd>The source server behind a CDN; in browsers, scheme plus host plus port.</dd>
+<dt>p99</dt><dd>The latency 99% of requests beat.</dd>
+<dt>Payload</dt><dd>The data carried in a request or message body.</dd>
+<dt>PoP</dt><dd>Point of presence, a CDN edge location.</dd>
+<dt>Provisioning</dt><dd>Creating and setting up infrastructure.</dd>
+<dt>Reconciliation</dt><dd>Continuously making actual state match desired state.</dd>
+<dt>Registry</dt><dd>Storage for container images.</dd>
+<dt>Replica</dt><dd>A copy of a service or database.</dd>
+<dt>Reverse proxy</dt><dd>Server that receives traffic and forwards it to apps behind it.</dd>
+<dt>Runbook</dt><dd>Step-by-step guide for an operational task or incident.</dd>
+<dt>Runner</dt><dd>Machine that executes CI jobs.</dd>
+<dt>Runtime</dt><dd>The environment code executes in, such as Node.js, or a container runtime.</dd>
+<dt>Sharding</dt><dd>Splitting data across several databases by key.</dd>
+<dt>Sidecar</dt><dd>Helper container running beside the main app container.</dd>
+<dt>SLO</dt><dd>Internal reliability target.</dd>
+<dt>Stateless</dt><dd>Keeps no data between requests in the instance itself.</dd>
+<dt>Throughput</dt><dd>Amount of work handled per unit of time.</dd>
+<dt>TLS termination</dt><dd>The point where encrypted traffic is decrypted.</dd>
+<dt>Upstream / downstream</dt><dd>The services you depend on versus those that depend on you.</dd>
+<dt>VPC</dt><dd>Private network inside a cloud provider.</dd>
+<dt>WAF</dt><dd>Web application firewall that filters malicious HTTP requests.</dd>
+<dt>Webhook</dt><dd>An HTTP call made to your URL when an event happens elsewhere.</dd>
+<dt>YAML</dt><dd>Indentation-based config format used by Compose, Kubernetes and CI.</dd>
+</dl>
+</article>
+
+<div class="ch-actions" id="ch-actions" hidden>
+  <button class="btn" id="mark">Mark as read</button>
+  <div class="nav-btns"><a class="btn" id="prev" href="#">Previous</a><a class="btn primary" id="next" href="#">Next</a></div>
+</div>
+
+</div>
+</main>
+</div>
+</div>
+
+<script>
+(function(){
+  var KEY='infra-guide-done-v1';
+  var done={};
+  try{done=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){done={}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(done))}catch(e){}}
+
+  var arts=[].slice.call(document.querySelectorAll('article.ch'));
+  var content=document.getElementById('content');
+  var home=document.getElementById('home-view');
+  var actions=document.getElementById('ch-actions');
+  var toc=document.getElementById('toc');
+  var side=document.getElementById('side');
+  var menu=document.getElementById('menu');
+  var topTitle=document.getElementById('top-title');
+
+  var parts=[];var byPart={};
+  arts.forEach(function(a){
+    var p=a.dataset.part;
+    if(!byPart[p]){byPart[p]=[];parts.push(p)}
+    byPart[p].push(a);
+    var h=document.createElement('h2');h.className='ch-title';h.textContent=a.dataset.title;
+    var c=document.createElement('div');c.className='crumb';
+    a.insertBefore(h,a.firstChild);a.insertBefore(c,h);
+  });
+  arts.forEach(function(a,i){a.querySelector('.crumb').textContent=a.dataset.part+', chapter '+(byPart[a.dataset.part].indexOf(a)+1)+' of '+byPart[a.dataset.part].length});
+
+  function buildToc(filter){
+    toc.innerHTML='';var q=(filter||'').trim().toLowerCase();var any=false;
+    parts.forEach(function(p){
+      var list=byPart[p].filter(function(a){return !q||a.dataset.title.toLowerCase().indexOf(q)>-1||a.textContent.toLowerCase().indexOf(q)>-1});
+      if(!list.length)return;any=true;
+      var wrap=document.createElement('div');wrap.className='nav-part';
+      var h=document.createElement('h3');h.textContent=p;wrap.appendChild(h);
+      var ol=document.createElement('ol');
+      list.forEach(function(a){
+        var li=document.createElement('li');var l=document.createElement('a');
+        l.href='#'+a.id;l.dataset.id=a.id;if(done[a.id])l.className='done';
+        l.innerHTML='<span class="dot" aria-hidden="true"></span><span></span>';
+        l.lastChild.textContent=a.dataset.title;
+        li.appendChild(l);ol.appendChild(li);
+      });
+      wrap.appendChild(ol);toc.appendChild(wrap);
+    });
+    if(!any){toc.innerHTML='<p class="nav-empty">No chapters match. Try a shorter word.</p>'}
+    markCurrent();
+  }
+  function progress(){
+    var n=arts.filter(function(a){return done[a.id]}).length;
+    document.getElementById('prog-text').textContent=n+' of '+arts.length+' chapters read';
+    document.getElementById('prog-bar').style.width=(n/arts.length*100)+'%';
+  }
+  function buildParts(){
+    var el=document.getElementById('parts');el.innerHTML='';
+    parts.forEach(function(p){
+      var list=byPart[p];var n=list.filter(function(a){return done[a.id]}).length;
+      var a=document.createElement('a');a.className='part-card';a.href='#'+list[0].id;
+      a.innerHTML='<strong></strong><span></span>';
+      a.firstChild.textContent=p;a.lastChild.textContent=list.length+' chapters, '+n+' read';
+      el.appendChild(a);
+    });
+  }
+  var current=null;
+  function markCurrent(){
+    [].forEach.call(toc.querySelectorAll('a'),function(l){
+      if(current&&l.dataset.id===current.id)l.setAttribute('aria-current','page');else l.removeAttribute('aria-current');
+    });
+  }
+  function setMark(){
+    var b=document.getElementById('mark');
+    if(current&&done[current.id]){b.textContent='Read';b.classList.add('is-done')}
+    else{b.textContent='Mark as read';b.classList.remove('is-done')}
+  }
+  function route(){
+    var id=location.hash.slice(1);
+    var a=arts.filter(function(x){return x.id===id})[0];
+    arts.forEach(function(x){x.classList.remove('show')});
+    current=a||null;
+    if(!a){home.hidden=false;actions.hidden=true;topTitle.textContent='Infra, explained';buildParts();document.title='Infra, explained: a field guide'}
+    else{
+      home.hidden=true;a.classList.add('show');actions.hidden=false;
+      var i=arts.indexOf(a);
+      var prev=document.getElementById('prev'),next=document.getElementById('next');
+      if(i>0){prev.href='#'+arts[i-1].id;prev.style.visibility='visible'}else{prev.style.visibility='hidden'}
+      if(i<arts.length-1){next.href='#'+arts[i+1].id;next.textContent='Next';}else{next.href='#home';next.textContent='Back to start'}
+      topTitle.textContent=a.dataset.title;document.title=a.dataset.title+' | Infra, explained';
+      setMark();
+    }
+    markCurrent();closeMenu();window.scrollTo(0,0);
+  }
+  document.getElementById('mark').addEventListener('click',function(){
+    if(!current)return;
+    if(done[current.id])delete done[current.id];else done[current.id]=1;
+    save();setMark();progress();
+    var l=toc.querySelector('a[data-id="'+current.id+'"]');if(l)l.classList.toggle('done',!!done[current.id]);
+  });
+  function closeMenu(){side.classList.remove('open');menu.setAttribute('aria-expanded','false')}
+  menu.addEventListener('click',function(){var o=side.classList.toggle('open');menu.setAttribute('aria-expanded',o?'true':'false')});
+  document.addEventListener('click',function(e){if(side.classList.contains('open')&&!side.contains(e.target)&&e.target!==menu)closeMenu()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu()});
+  document.getElementById('search').addEventListener('input',function(e){buildToc(e.target.value)});
+  var gf=document.getElementById('gloss-filter');
+  gf.addEventListener('input',function(){
+    var q=gf.value.trim().toLowerCase();
+    [].forEach.call(document.querySelectorAll('#gloss dt'),function(dt){
+      var dd=dt.nextElementSibling;var hit=!q||(dt.textContent+' '+dd.textContent).toLowerCase().indexOf(q)>-1;
+      dt.hidden=!hit;dd.hidden=!hit;
+    });
+  });
+  window.addEventListener('hashchange',route);
+  buildToc('');progress();route();
+})();
+</script>
+</body>
+</html>

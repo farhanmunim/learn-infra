@@ -121,6 +121,18 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+<style>
+.fig{margin:1.25rem 0;padding:1rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)}
+.fig svg{display:block;width:100%;max-width:560px;height:auto;margin:0 auto}
+.fig figcaption{margin-top:.6rem;font-size:13px;color:var(--muted);text-align:center}
+.fig .box{fill:var(--muted-bg);stroke:var(--border)}
+.fig .box-accent{fill:var(--accent-bg);stroke:var(--accent)}
+.fig text{fill:var(--fg);font-family:var(--sans);font-size:12px}
+.fig .t-muted{fill:var(--muted);font-size:11px}
+.fig .t-accent{fill:var(--accent-fg);font-weight:600}
+.fig .t-head{font-weight:600}
+.fig .arrow{stroke:var(--muted);fill:none;stroke-width:1.5}
+</style>
 </head>
 <body>
 <div class="app">
@@ -146,7 +158,7 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
     <li><span class="n">1</span><div><b>Someone types a domain</b><p>DNS turns the name into an IP address.</p><a href="#dns">DNS and record types</a></div></li>
     <li><span class="n">2</span><div><b>A secure connection opens</b><p>TLS proves the server is who it claims to be and encrypts the traffic.</p><a href="#tls">HTTPS, TLS and certificates</a></div></li>
     <li><span class="n">3</span><div><b>The edge answers if it can</b><p>A CDN serves cached copies from a data centre near the visitor.</p><a href="#cdn">CDNs and the edge</a></div></li>
-    <li><span class="n">4</span><div><b>Traffic is spread and routed</b><p>A load balancer and reverse proxy decide which server and which app gets the request.</p><a href="#proxy">Forward and reverse proxies</a></div></li>
+    <li><span class="n">4</span><div><b>Traffic is spread and routed</b><p>Traffic directors — a load balancer and a reverse proxy — decide which server and which app gets the request.</p><a href="#proxy">Forward and reverse proxies</a></div></li>
     <li><span class="n">5</span><div><b>Your code runs</b><p>In a container, a VM or a serverless function.</p><a href="#vm-container">VMs versus containers</a></div></li>
     <li><span class="n">6</span><div><b>Data is fetched</b><p>From a cache if possible, otherwise the database.</p><a href="#caching">Caching and Redis</a></div></li>
     <li><span class="n">7</span><div><b>Everything is recorded</b><p>Logs, metrics and traces tell you what happened and how fast.</p><a href="#three-pillars">Logs, metrics and traces</a></div></li>
@@ -157,6 +169,31 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
 </section>
 
 <!-- PART 1 -->
+<article class="ch" id="servers" data-part="Start here" data-title="Servers, SSH and the terminal">
+<p class="lead">A server is just a computer that is always on, waiting for requests.</p>
+<p>There's no magic in the word. A <b>server</b> is an ordinary computer, usually sitting in a <b>data centre</b> (a building full of them, with reliable power and very fast internet), that runs with no screen or keyboard attached and never sleeps. When people say "the server", they mean "the computer our code runs on".</p>
+<p>Because it has no screen, you control it with text. The <b>terminal</b> (also called the <b>command line</b> or <b>shell</b>) is the window where you type commands like <code>ls</code> (list files) and read the text that comes back. It looks intimidating; it's really just a chat with the computer where every message is an instruction.</p>
+<p><b>SSH</b> (secure shell) is how you open a terminal on a machine that isn't in front of you. You type <code>ssh user@your-server</code>, prove who you are (ideally with an <b>SSH key</b>, a pair of cryptographic files, rather than a password), and from then on everything you type travels to the server encrypted. Nearly all server administration happens over SSH.</p>
+<figure class="fig">
+<svg viewBox="0 0 560 150" role="img" aria-label="Diagram: your laptop connects to a server in a data centre over SSH, encrypted, on port 22">
+<defs><marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+<rect class="box" x="20" y="45" width="150" height="60" rx="8"/>
+<text x="95" y="70" text-anchor="middle">Your laptop</text>
+<text x="95" y="88" text-anchor="middle" class="t-muted">a terminal window</text>
+<rect class="box-accent" x="390" y="35" width="150" height="80" rx="8"/>
+<text x="465" y="63" text-anchor="middle">A server</text>
+<text x="465" y="81" text-anchor="middle" class="t-muted">always-on computer</text>
+<text x="465" y="97" text-anchor="middle" class="t-muted">in a data centre</text>
+<line class="arrow" x1="175" y1="75" x2="383" y2="75" marker-end="url(#arrA)"/>
+<text x="279" y="62" text-anchor="middle" class="t-accent">SSH</text>
+<text x="279" y="95" text-anchor="middle" class="t-muted">typed commands, encrypted</text>
+</svg>
+<figcaption>SSH gives you a terminal on a computer that isn't in front of you.</figcaption>
+</figure>
+<aside class="yours"><h4>In your setup</h4><p>Your Hetzner VPS is exactly this: a rented always-on computer in a German data centre. You reach its terminal with SSH (over Tailscale), and everything else in this guide runs on machines like it.</p></aside>
+<aside class="say"><h4>Say it like this</h4><p>"SSH into the box and check the logs, the dashboard isn't telling us much."</p></aside>
+</article>
+
 <article class="ch" id="layers" data-part="Start here" data-title="Who does what: the layers of a tech team">
 <p class="lead">Most infra confusion is really confusion about which layer someone is talking about.</p>
 <p>Engineers split a system into layers, and job titles follow the same lines:</p>
@@ -164,7 +201,7 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
 <li><b>Frontend</b> is what runs in the browser: HTML, CSS, JavaScript, your Astro site.</li>
 <li><b>Backend</b> is code that runs on a server: APIs, business logic, talking to the database.</li>
 <li><b>Infrastructure</b> ("infra") is what the backend runs on: servers, networks, storage, DNS.</li>
-<li><b>Platform</b> is the tooling that makes infra easy for other developers to use, such as an internal deploy button. Coolify is a platform product.</li>
+<li><b>Platform</b> is the tooling that makes infra easy for other developers to use, such as an internal deploy button. Coolify (a self-hosted tool that gives you a push-to-deploy button on your own server) is a platform product.</li>
 <li><b>Operations</b> ("ops") is keeping it all running: monitoring, backups, upgrades, incidents.</li>
 </ul>
 <p>"Architecture" sits across all of these. It is the set of decisions about which pieces exist and how they talk to each other, usually drawn as boxes and arrows.</p>
@@ -175,7 +212,7 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
 <article class="ch" id="stack-words" data-part="Start here" data-title="Stack, service, environment, instance">
 <p class="lead">Four nouns you'll hear in almost every infra sentence.</p>
 <p>A <b>stack</b> is the set of technologies a product uses. "Our stack is Next.js, Postgres and AWS." People also say "tech stack" or "the stack".</p>
-<p>A <b>service</b> is one running piece of software with a job, usually reachable over the network. Your database is a service, Umami is a service, an email sender might be a service. A system is a set of services.</p>
+<p>A <b>service</b> is one running piece of software with a job, usually reachable over the network. Your database is a service, Umami (a self-hosted, privacy-friendly alternative to Google Analytics) is a service, an email sender might be a service. A system is a set of services.</p>
 <p>An <b>environment</b> is a complete copy of the system for a purpose: <code>dev</code> for building, <code>staging</code> for testing, <code>production</code> (or <code>prod</code>) for real users.</p>
 <p>An <b>instance</b> is one running copy of something. Three instances of a service means three copies running side by side. In the cloud, "instance" also just means a virtual server.</p>
 <aside class="say"><h4>Say it like this</h4><p>"We run two instances of the API service in prod, but only one in staging to save money."</p></aside>
@@ -186,7 +223,8 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
 <p class="lead">An IP address finds the machine; a port finds the program on that machine.</p>
 <p>Every device on a network has an <b>IP address</b>. IPv4 looks like <code>203.0.113.10</code>; IPv6 looks like <code>2001:db8::1</code> and exists because the world ran out of IPv4 addresses.</p>
 <p>Addresses are either <b>public</b> (reachable from the internet) or <b>private</b> (only inside a network, such as <code>192.168.x.x</code> at home or <code>10.x.x.x</code> in a data centre).</p>
-<p>A <b>port</b> is a numbered door on a machine. One server can run many programs, each listening on a different port. Common ones: 22 for SSH, 80 for HTTP, 443 for HTTPS, 5432 for Postgres, 6379 for Redis, 3000 or 8080 for app servers in development.</p>
+<p>A <b>port</b> is a numbered door on a machine. One server can run many programs, each listening on a different port. Common ones: 22 for SSH, 80 for HTTP, 443 for HTTPS, 5432 for Postgres and 6379 for Redis (a database and a cache you'll meet in the databases part), 3000 or 8080 for app servers in development.</p>
+<p>Data between machines travels in small chunks called <b>packets</b>, delivered one of two ways: <b>TCP</b> checks that every packet arrives, in order (most of the web uses it), while <b>UDP</b> just sends and hopes, which is faster and fine for things like video calls where a lost split-second doesn't matter.</p>
 <p>To "expose" or "open" a port means allowing traffic to reach it. To "bind" a port means a program has claimed it.</p>
 <aside class="yours"><h4>In your setup</h4><p>Your VPS has a public IP where port 22 is blocked by the Hetzner firewall, and a private Tailscale IP where port 22 works. Same machine, same port, different network path.</p></aside>
 <aside class="say"><h4>Say it like this</h4><p>"The container is listening on 3000 but nothing's mapped to it, so it isn't exposed."</p></aside>
@@ -194,7 +232,7 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
 
 <article class="ch" id="dns" data-part="Networking and DNS" data-title="DNS and record types">
 <p class="lead">DNS is the internet's phone book: it turns names into addresses and other facts.</p>
-<p>When you visit a domain, your device asks a <b>resolver</b> (often your ISP or Cloudflare's 1.1.1.1). The resolver asks the domain's <b>authoritative nameservers</b>, which hold the real answer. Where you manage those records is called your <b>DNS provider</b>, which may differ from your <b>registrar</b>, the company you bought the domain from.</p>
+<p>When you visit a domain, your device asks a <b>resolver</b> (often run by your internet provider, or a public one like Cloudflare's 1.1.1.1). The resolver asks the domain's <b>authoritative nameservers</b>, which hold the real answer. Where you manage those records is called your <b>DNS provider</b>, which may differ from your <b>registrar</b>, the company you bought the domain from.</p>
 <p>Records are typed:</p>
 <div class="tbl"><table>
 <tr><th>Type</th><th>What it says</th></tr>
@@ -202,11 +240,12 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
 <tr><td><code>AAAA</code></td><td>Same, for IPv6.</td></tr>
 <tr><td><code>CNAME</code></td><td>This name is an alias of another name. Can't sit on the bare domain in classic DNS.</td></tr>
 <tr><td><code>MX</code></td><td>Where email for this domain should be delivered.</td></tr>
-<tr><td><code>TXT</code></td><td>Free text, used to prove ownership and for email security (SPF, DKIM, DMARC).</td></tr>
+<tr><td><code>TXT</code></td><td>Free text, used to prove ownership and for email security (SPF, DKIM and DMARC, three standards that prove an email really came from your domain).</td></tr>
 <tr><td><code>NS</code></td><td>Which nameservers are authoritative.</td></tr>
 <tr><td><code>CAA</code></td><td>Which certificate authorities may issue certificates for you.</td></tr>
 </table></div>
 <p>The bare domain (<code>farhan.app</code>) is called the <b>apex</b> or <b>root</b>. Anything in front of it is a <b>subdomain</b>. Cloudflare's "CNAME flattening" is a workaround for putting an alias on the apex.</p>
+<p><code>dig</code> is a terminal command that asks DNS questions. Try:</p>
 <pre><code>dig farhan.app A +short
 dig farhan.app MX +short</code></pre>
 <aside class="say"><h4>Say it like this</h4><p>"Can you add a CNAME for status pointing at the uptime host, and a TXT record so Google can verify the domain?"</p></aside>
@@ -233,7 +272,7 @@ dig farhan.app MX +short</code></pre>
 </ul>
 <p>502 and 504 matter for infra: they usually mean a proxy in front of your app couldn't reach it or gave up waiting. The proxy is fine; the thing behind it isn't.</p>
 <p>Versions: HTTP/1.1 is the classic, HTTP/2 multiplexes many requests over one connection, HTTP/3 runs over UDP (via QUIC) for faster connections on flaky networks.</p>
-<aside class="say"><h4>Say it like this</h4><p>"We're getting 502s from Traefik, so the app container has probably crashed or isn't healthy yet."</p></aside>
+<aside class="say"><h4>Say it like this</h4><p>"We're getting 502s from Traefik, our reverse proxy, so the app container has probably crashed or isn't healthy yet."</p></aside>
 </article>
 
 <article class="ch" id="tls" data-part="Networking and DNS" data-title="HTTPS, TLS and certificates">
@@ -260,7 +299,31 @@ dig farhan.app MX +short</code></pre>
 <li><b>TLS termination</b> and certificates.</li>
 <li>Compression, caching, redirects, header rewrites and basic rate limiting.</li>
 </ul>
-<p>Common reverse proxies: Nginx, Traefik, Caddy, HAProxy, Envoy. In Kubernetes the same job is called an <b>ingress</b> (or the newer <b>Gateway API</b>). The app behind the proxy is called the <b>upstream</b> or <b>origin</b>.</p>
+<p>Common reverse proxies: Nginx, Traefik, Caddy, HAProxy, Envoy. In Kubernetes (the container-orchestration system covered in the containers part) the same job is called an <b>ingress</b> (or the newer <b>Gateway API</b>). The app behind the proxy is called the <b>upstream</b> or <b>origin</b>.</p>
+<figure class="fig">
+<svg viewBox="0 0 560 190" role="img" aria-label="Diagram: visitors reach a reverse proxy, which reads the hostname and forwards each request to the matching app">
+<defs><marker id="arrC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+<rect class="box" x="20" y="75" width="100" height="40" rx="8"/>
+<text x="70" y="99" text-anchor="middle">Visitors</text>
+<rect class="box-accent" x="185" y="65" width="145" height="60" rx="8"/>
+<text x="257" y="90" text-anchor="middle">Reverse proxy</text>
+<text x="257" y="107" text-anchor="middle" class="t-muted">reads the hostname</text>
+<rect class="box" x="400" y="20" width="140" height="38" rx="8"/>
+<text x="470" y="37" text-anchor="middle">Umami</text>
+<text x="470" y="51" text-anchor="middle" class="t-muted">mochi.farhan.app</text>
+<rect class="box" x="400" y="76" width="140" height="38" rx="8"/>
+<text x="470" y="93" text-anchor="middle">Uptime Kuma</text>
+<text x="470" y="107" text-anchor="middle" class="t-muted">uptime.farhan.app</text>
+<rect class="box" x="400" y="132" width="140" height="38" rx="8"/>
+<text x="470" y="149" text-anchor="middle">WordPress</text>
+<text x="470" y="163" text-anchor="middle" class="t-muted">cms.farhan.app</text>
+<line class="arrow" x1="125" y1="95" x2="178" y2="95" marker-end="url(#arrC)"/>
+<line class="arrow" x1="335" y1="80" x2="393" y2="42" marker-end="url(#arrC)"/>
+<line class="arrow" x1="335" y1="95" x2="393" y2="95" marker-end="url(#arrC)"/>
+<line class="arrow" x1="335" y1="110" x2="393" y2="148" marker-end="url(#arrC)"/>
+</svg>
+<figcaption>One public IP, many apps: the proxy routes by hostname (host-based routing).</figcaption>
+</figure>
 <aside class="yours"><h4>In your setup</h4><p>One public IP, many sites. Traefik reads the hostname (<code>mochi.farhan.app</code> versus <code>uptime.farhan.app</code>) and forwards to the matching container. That's host-based routing.</p></aside>
 <aside class="say"><h4>Say it like this</h4><p>"Put it behind the reverse proxy and let it handle certs, the app shouldn't be exposed directly."</p></aside>
 </article>
@@ -274,7 +337,7 @@ dig farhan.app MX +short</code></pre>
 <li><b>Layer 7</b> balancers understand HTTP, so they can route by path, header or cookie. A reverse proxy is effectively an L7 balancer.</li>
 </ul>
 <p>(The layers come from the <b>OSI model</b>, a seven-level way of describing networking. You only need L4 = transport and L7 = application.)</p>
-<p>Distribution methods include round robin, least connections and weighted. <b>Sticky sessions</b> keep a user on the same backend, which is a sign the app is storing state it shouldn't. <b>Draining</b> means letting existing requests finish before removing a server.</p>
+<p>Distribution methods include round robin, least connections and weighted. <b>Sticky sessions</b> keep a user on the same backend, which is a sign the app is storing state it shouldn't. <b>Draining</b> means letting existing requests finish before removing a server. Cloud providers sell load balancers as products; AWS's are the <b>ALB</b> (layer 7) and <b>NLB</b> (layer 4), names you'll hear a lot.</p>
 <aside class="say"><h4>Say it like this</h4><p>"The ALB health check is failing on one target, so it's been pulled from the pool."</p></aside>
 </article>
 
@@ -287,7 +350,7 @@ dig farhan.app MX +short</code></pre>
 <li><b>Cache-Control</b> headers tell the CDN and browsers how long to keep things.</li>
 <li><b>The edge</b> means those PoPs. "Running at the edge" means code executes in the PoP, not in one central region.</li>
 </ul>
-<p>CDNs also absorb DDoS attacks and often provide a <b>WAF</b> (web application firewall). Big names: Cloudflare, Fastly, Akamai, AWS CloudFront.</p>
+<p>CDNs also absorb <b>DDoS</b> attacks (attackers flooding a site with junk traffic to knock it over) and often provide a <b>WAF</b> (web application firewall). Big names: Cloudflare, Fastly, Akamai, AWS CloudFront.</p>
 <aside class="yours"><h4>In your setup</h4><p>Cloudflare Pages is a CDN-first host. Your Astro build is uploaded once and served from every PoP. There's no origin server in the classic sense, which is why a static site is so fast and cheap.</p></aside>
 <aside class="say"><h4>Say it like this</h4><p>"It's a cache issue, purge the CDN and check the Cache-Control on that route."</p></aside>
 </article>
@@ -295,7 +358,7 @@ dig farhan.app MX +short</code></pre>
 <article class="ch" id="privnet" data-part="Networking and DNS" data-title="Firewalls, NAT and VPNs">
 <p class="lead">Most of network security is deciding who can reach what, then hiding everything else.</p>
 <p>A <b>firewall</b> allows or blocks traffic by rules, usually source, destination and port. Cloud providers call them <b>security groups</b> or <b>network firewall rules</b>. "Default deny" means everything is blocked unless a rule allows it.</p>
-<p><b>Ingress</b> is traffic coming in; <b>egress</b> is traffic going out. (Confusingly, Kubernetes also uses "ingress" for its reverse proxy.)</p>
+<p><b>Ingress</b> is traffic coming in; <b>egress</b> is traffic going out. (Confusingly, Kubernetes, which you'll meet in the containers part, also uses "ingress" for its reverse proxy.)</p>
 <p><b>NAT</b> (network address translation) lets many private machines share one public IP for outbound traffic. Your home router does this. In the cloud, a <b>NAT gateway</b> lets private servers reach the internet without being reachable from it.</p>
 <p>A <b>VPN</b> joins distant machines into one private network. Classic VPNs route through a central server. <b>Mesh VPNs</b> like Tailscale (built on WireGuard) connect devices directly. A <b>bastion host</b> or <b>jump box</b> is the older pattern: one hardened server you SSH into, then hop to private machines.</p>
 <aside class="yours"><h4>In your setup</h4><p>Blocking port 22 publicly and only allowing SSH over Tailscale is textbook practice. You've replaced a bastion host with a mesh VPN.</p></aside>
@@ -312,14 +375,14 @@ dig farhan.app MX +short</code></pre>
 <li><b>Route tables</b> decide where traffic from each subnet goes.</li>
 </ul>
 <p>Connecting VPCs together is <b>peering</b>; connecting a VPC to an office is a <b>site-to-site VPN</b> or a dedicated link (AWS Direct Connect, Azure ExpressRoute).</p>
-<aside class="say"><h4>Say it like this</h4><p>"The RDS instance sits in a private subnet; only the app tier's security group can reach 5432."</p></aside>
+<aside class="say"><h4>Say it like this</h4><p>"The RDS instance (AWS's managed database, coming up in two chapters) sits in a private subnet; only the app tier's security group can reach 5432."</p></aside>
 </article>
 <!-- PART 3 -->
 <article class="ch" id="hosting" data-part="Hosting and cloud" data-title="Bare metal, VPS and cloud VMs">
 <p class="lead">Three ways to rent a computer, from most physical to most abstract.</p>
 <ul>
 <li><b>Bare metal</b> or a <b>dedicated server</b>: a whole physical machine that's yours. Predictable performance, slowest to provision.</li>
-<li><b>VPS</b> (virtual private server): a slice of a physical machine, carved out by a <b>hypervisor</b>. Fixed monthly price, generous bandwidth. Hetzner, DigitalOcean, Linode, OVH.</li>
+<li><b>VPS</b> (virtual private server): a slice of a physical machine, carved out by a <b>hypervisor</b> (software that splits one physical machine into several virtual ones). Fixed monthly price, generous bandwidth. Hetzner, DigitalOcean, Linode, OVH.</li>
 <li><b>Cloud VM</b>: technically also a VPS, but inside a large platform (AWS EC2, Azure VMs, Google Compute Engine) with APIs, autoscaling, and dozens of managed services beside it. Usually billed per second, with bandwidth charged separately.</li>
 </ul>
 <p>Industry shorthand: <b>on-prem</b> (on-premises) means servers in your own building; <b>colo</b> (colocation) means your hardware in someone else's data centre; <b>hybrid cloud</b> mixes on-prem with public cloud; <b>multi-cloud</b> means using more than one provider.</p>
@@ -375,7 +438,7 @@ dig farhan.app MX +short</code></pre>
 <tr><td>RDS / Aurora</td><td>Managed relational databases (Postgres, MySQL).</td></tr>
 <tr><td>DynamoDB</td><td>Managed NoSQL key-value database.</td></tr>
 <tr><td>Lambda</td><td>Serverless functions.</td></tr>
-<tr><td>ECS / Fargate</td><td>Run containers without managing Kubernetes.</td></tr>
+<tr><td>ECS / Fargate</td><td>Run containers without managing Kubernetes (the orchestration system in the next part).</td></tr>
 <tr><td>EKS</td><td>Managed Kubernetes.</td></tr>
 <tr><td>ECR</td><td>Container image registry.</td></tr>
 <tr><td>CloudFront</td><td>CDN.</td></tr>
@@ -439,8 +502,33 @@ dig farhan.app MX +short</code></pre>
 <article class="ch" id="vm-container" data-part="Containers and orchestration" data-title="VMs versus containers">
 <p class="lead">A VM fakes a whole computer; a container fakes just an isolated process on a shared one.</p>
 <p>A <b>virtual machine</b> runs a full operating system on virtual hardware provided by a <b>hypervisor</b>. Strong isolation, but each VM carries a whole OS, so it's heavy and slow to boot.</p>
-<p>A <b>container</b> shares the host's operating system <b>kernel</b> and isolates only the process, its files and its network. It starts in milliseconds and is small, but isolation is weaker than a VM.</p>
+<p>A <b>container</b> shares the host's operating system <b>kernel</b> (the core of the OS) and isolates only the process, its files and its network. It starts in milliseconds and is small, but isolation is weaker than a VM.</p>
 <p>In practice they stack: containers run <em>inside</em> VMs. Your VPS is a VM; Docker runs containers inside it.</p>
+<figure class="fig">
+<svg viewBox="0 0 560 250" role="img" aria-label="Layer diagram: each virtual machine carries its own guest operating system on top of a hypervisor, while containers share the host operating system's kernel through a container runtime">
+<text x="145" y="20" text-anchor="middle" class="t-head">Virtual machines</text>
+<text x="415" y="20" text-anchor="middle" class="t-head">Containers</text>
+<rect class="box" x="20" y="32" width="120" height="120" rx="6"/>
+<text x="80" y="80" text-anchor="middle">App</text>
+<text x="80" y="134" text-anchor="middle" class="t-muted">Guest OS (its own)</text>
+<rect class="box" x="150" y="32" width="120" height="120" rx="6"/>
+<text x="210" y="80" text-anchor="middle">App</text>
+<text x="210" y="134" text-anchor="middle" class="t-muted">Guest OS (its own)</text>
+<rect class="box" x="20" y="160" width="250" height="34" rx="6"/>
+<text x="145" y="181" text-anchor="middle">Hypervisor</text>
+<rect class="box" x="20" y="202" width="250" height="34" rx="6"/>
+<text x="145" y="223" text-anchor="middle" class="t-muted">Physical hardware</text>
+<rect class="box-accent" x="290" y="92" width="120" height="60" rx="6"/>
+<text x="350" y="127" text-anchor="middle">App</text>
+<rect class="box-accent" x="420" y="92" width="120" height="60" rx="6"/>
+<text x="480" y="127" text-anchor="middle">App</text>
+<rect class="box" x="290" y="160" width="250" height="34" rx="6"/>
+<text x="415" y="181" text-anchor="middle">Container runtime (Docker)</text>
+<rect class="box" x="290" y="202" width="250" height="34" rx="6"/>
+<text x="415" y="223" text-anchor="middle" class="t-muted">Host OS on the hardware — one shared kernel</text>
+</svg>
+<figcaption>Each VM carries a whole operating system of its own; containers share the host's, which is why they're small and start fast.</figcaption>
+</figure>
 <p>Words to know: the <b>host</b> is the machine running containers; the <b>container runtime</b> actually runs them (Docker Engine, containerd, Podman); <b>OCI</b> is the open standard for image formats, so images work across tools.</p>
 <aside class="say"><h4>Say it like this</h4><p>"We containerised the app so it runs the same on a laptop, in CI and in prod."</p></aside>
 </article>
@@ -468,7 +556,7 @@ CMD ["node", "server.js"]</code></pre>
 <p class="lead">Containers are disposable, so anything worth keeping lives outside them.</p>
 <p>A container's own filesystem is thrown away when it's replaced. To keep data you attach a <b>volume</b> (storage managed by Docker) or a <b>bind mount</b> (a folder from the host). Your nightly rsync backs up volumes precisely because that's where the real data lives.</p>
 <p>Containers talk to each other over Docker <b>networks</b>, using service names as hostnames (<code>db:5432</code>) instead of IPs.</p>
-<p><b>Docker Compose</b> describes a multi-container app in one YAML file: which images, which ports, which volumes, which environment variables, and what depends on what. It's the standard for running a small stack on one machine.</p>
+<p><b>Docker Compose</b> describes a multi-container app in one YAML file (a simple, indentation-based configuration format): which images, which ports, which volumes, which environment variables, and what depends on what. It's the standard for running a small stack on one machine.</p>
 <pre><code>services:
   app:
     image: ghcr.io/me/app:1.4.2
@@ -499,7 +587,8 @@ volumes:
 </article>
 
 <article class="ch" id="k8s" data-part="Containers and orchestration" data-title="Kubernetes vocabulary">
-<p class="lead">Kubernetes (K8s) has its own dictionary. These words cover most conversations.</p>
+<p class="lead">Kubernetes (K8s) is the most popular orchestrator: it runs your containers across many machines and keeps them running.</p>
+<p>It came out of Google, it's open source, and it won so completely that "do we need Kubernetes?" is now a standard engineering debate. It also has its own dictionary, and these words cover most conversations.</p>
 <div class="tbl"><table>
 <tr><th>Term</th><th>Meaning</th></tr>
 <tr><td>Cluster</td><td>The whole system: a control plane plus worker machines.</td></tr>
@@ -692,7 +781,7 @@ jobs:
 <!-- PART 6 -->
 <article class="ch" id="sql-nosql" data-part="Databases and data" data-title="SQL, NoSQL and picking a database">
 <p class="lead">Relational databases are the default; everything else is a specialist tool.</p>
-<p><b>Relational</b> (SQL) databases store data in tables with a fixed <b>schema</b> and join them with keys. Postgres, MySQL/MariaDB, SQL Server, SQLite. Postgres is the modern favourite.</p>
+<p><b>Relational</b> (SQL) databases store data in tables with a fixed <b>schema</b> (an agreed shape for the tables and their columns) and join them with keys. Postgres, MySQL/MariaDB, SQL Server, SQLite. Postgres is the modern favourite.</p>
 <p><b>NoSQL</b> is an umbrella for everything else:</p>
 <ul>
 <li><b>Document</b> stores (MongoDB, Firestore): JSON-like records, flexible shape.</li>
@@ -1196,6 +1285,8 @@ jobs:
 <dt>Control plane / data plane</dt><dd>The part that manages configuration versus the part that carries real traffic.</dd>
 <dt>Cron</dt><dd>Time-based job scheduler, and its schedule syntax.</dd>
 <dt>Daemon</dt><dd>A background process on a server, often ending in d (sshd, dockerd).</dd>
+<dt>DDoS</dt><dd>Attack that floods a service with junk traffic to knock it offline.</dd>
+<dt>Docker</dt><dd>The most common tool for building and running containers.</dd>
 <dt>Drift</dt><dd>Live systems no longer matching their definition in code.</dd>
 <dt>Egress</dt><dd>Outbound traffic, and the fees clouds charge for it.</dd>
 <dt>Ephemeral</dt><dd>Short-lived and disposable, such as preview environments or container disks.</dd>
@@ -1206,6 +1297,7 @@ jobs:
 <dt>Immutable infrastructure</dt><dd>Replacing servers rather than modifying them in place.</dd>
 <dt>Ingress</dt><dd>Inbound traffic; in Kubernetes, the HTTP routing resource.</dd>
 <dt>Kernel</dt><dd>The core of an operating system, shared by containers on a host.</dd>
+<dt>Kubernetes</dt><dd>The most popular orchestrator: runs containers across many machines and keeps them running.</dd>
 <dt>Latency</dt><dd>Time for one request to complete.</dd>
 <dt>Load balancer</dt><dd>Distributes traffic across several backends.</dd>
 <dt>Mesh VPN</dt><dd>A VPN where devices connect directly to each other, like Tailscale.</dd>
@@ -1217,8 +1309,10 @@ jobs:
 <dt>p99</dt><dd>The latency 99% of requests beat.</dd>
 <dt>Payload</dt><dd>The data carried in a request or message body.</dd>
 <dt>PoP</dt><dd>Point of presence, a CDN edge location.</dd>
+<dt>Postgres</dt><dd>The most popular open-source relational (SQL) database.</dd>
 <dt>Provisioning</dt><dd>Creating and setting up infrastructure.</dd>
 <dt>Reconciliation</dt><dd>Continuously making actual state match desired state.</dd>
+<dt>Redis</dt><dd>In-memory key-value store used for caching, sessions and queues.</dd>
 <dt>Registry</dt><dd>Storage for container images.</dd>
 <dt>Replica</dt><dd>A copy of a service or database.</dd>
 <dt>Reverse proxy</dt><dd>Server that receives traffic and forwards it to apps behind it.</dd>
@@ -1228,9 +1322,13 @@ jobs:
 <dt>Sharding</dt><dd>Splitting data across several databases by key.</dd>
 <dt>Sidecar</dt><dd>Helper container running beside the main app container.</dd>
 <dt>SLO</dt><dd>Internal reliability target.</dd>
+<dt>SSH</dt><dd>Secure shell: opens an encrypted terminal on a remote machine.</dd>
 <dt>Stateless</dt><dd>Keeps no data between requests in the instance itself.</dd>
+<dt>TCP</dt><dd>Delivery method that checks every packet arrives, in order. Most of the web uses it.</dd>
 <dt>Throughput</dt><dd>Amount of work handled per unit of time.</dd>
 <dt>TLS termination</dt><dd>The point where encrypted traffic is decrypted.</dd>
+<dt>Traefik</dt><dd>A reverse proxy that configures itself from container labels; what Coolify uses.</dd>
+<dt>UDP</dt><dd>Fast delivery method with no guarantees, used where speed beats completeness.</dd>
 <dt>Upstream / downstream</dt><dd>The services you depend on versus those that depend on you.</dd>
 <dt>VPC</dt><dd>Private network inside a cloud provider.</dd>
 <dt>WAF</dt><dd>Web application firewall that filters malicious HTTP requests.</dd>

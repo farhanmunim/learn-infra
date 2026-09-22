@@ -64,6 +64,8 @@ tr:last-child td{border-bottom:0}
 .nav-part a .dot{flex:none;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--border);transform:translateY(-1px)}
 .nav-part a.done .dot{background:var(--ok);border-color:var(--ok)}
 .nav-empty{font-size:14px;color:var(--muted);padding:.5rem}
+.side-close{display:none}
+body.menu-open{overflow:hidden}
 
 .top{display:none;position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--border);padding:.6rem 1rem;padding-top:calc(.6rem + env(safe-area-inset-top,0px));align-items:center;gap:.75rem;margin-top:calc(-1 * env(safe-area-inset-top,0px))}
 .btn{height:36px;padding:0 .9rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--fg);font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem}
@@ -115,8 +117,9 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
 @media (max-width:860px){
   .app{grid-template-columns:minmax(0,1fr)}
   .top{display:flex}
-  .side{position:fixed;inset:0 auto 0 0;width:min(86vw,320px);z-index:10;transform:translateX(-100%);transition:transform .2s;height:100%;padding-top:calc(1.25rem + env(safe-area-inset-top,0px));padding-bottom:calc(2rem + env(safe-area-inset-bottom,0px));box-shadow:none}
+  .side{position:fixed;inset:0 auto 0 0;width:min(86vw,320px);z-index:10;transform:translateX(-100%);transition:transform .2s;height:100%;height:100dvh;padding-top:calc(1.25rem + env(safe-area-inset-top,0px));padding-bottom:calc(2rem + env(safe-area-inset-bottom,0px));box-shadow:none}
   .side.open{transform:none;box-shadow:0 0 0 100vmax rgba(0,0,0,.4)}
+  .side-close{display:inline-flex;position:absolute;top:calc(1rem + env(safe-area-inset-top,0px));right:.75rem;width:36px;padding:0;justify-content:center;font-size:18px;line-height:1}
   main{padding-top:1.5rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -137,6 +140,7 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
 <body>
 <div class="app">
 <nav class="side" id="side" aria-label="Chapters">
+  <button class="btn side-close" id="side-close" aria-label="Close chapters menu">&times;</button>
   <a class="brand" href="#home"><span class="brand-mark">&gt;_</span>Infra, explained</a>
   <input class="search" id="search" type="search" placeholder="Search chapters, e.g. ingress" aria-label="Search chapters">
   <div class="progress"><span id="prog-text">0 of 0 chapters read</span><div class="bar"><span id="prog-bar"></span></div></div>
@@ -1443,8 +1447,10 @@ jobs:
     save();setMark();progress();
     var l=toc.querySelector('a[data-id="'+current.id+'"]');if(l)l.classList.toggle('done',!!done[current.id]);
   });
-  function closeMenu(){side.classList.remove('open');menu.setAttribute('aria-expanded','false')}
-  menu.addEventListener('click',function(){var o=side.classList.toggle('open');menu.setAttribute('aria-expanded',o?'true':'false')});
+  function closeMenu(){side.classList.remove('open');menu.setAttribute('aria-expanded','false');document.body.classList.remove('menu-open')}
+  menu.addEventListener('click',function(){var o=side.classList.toggle('open');menu.setAttribute('aria-expanded',o?'true':'false');document.body.classList.toggle('menu-open',o)});
+  document.getElementById('side-close').addEventListener('click',closeMenu);
+  side.addEventListener('click',function(e){var t=e.target;while(t&&t!==side){if(t.tagName==='A'){closeMenu();break}t=t.parentNode}});
   document.addEventListener('click',function(e){if(side.classList.contains('open')&&!side.contains(e.target)&&e.target!==menu)closeMenu()});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu()});
   document.getElementById('search').addEventListener('input',function(e){buildToc(e.target.value)});

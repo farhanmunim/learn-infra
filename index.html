@@ -64,7 +64,7 @@ tr:last-child td{border-bottom:0}
 .nav-part a .dot{flex:none;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--border);transform:translateY(-1px)}
 .nav-part a.done .dot{background:var(--ok);border-color:var(--ok)}
 .nav-empty{font-size:14px;color:var(--muted);padding:.5rem}
-.side-close{display:none}
+.btn.side-close{display:none}
 body.menu-open{overflow:hidden}
 
 .top{display:none;position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--border);padding:.6rem 1rem;padding-top:calc(.6rem + env(safe-area-inset-top,0px));align-items:center;gap:.75rem;margin-top:calc(-1 * env(safe-area-inset-top,0px))}
@@ -119,7 +119,7 @@ dl.gloss dd{margin:.1rem 0 0;color:var(--muted)}
   .top{display:flex}
   .side{position:fixed;inset:0 auto 0 0;width:min(86vw,320px);z-index:10;transform:translateX(-100%);transition:transform .2s;height:100%;height:100dvh;padding-top:calc(1.25rem + env(safe-area-inset-top,0px));padding-bottom:calc(2rem + env(safe-area-inset-bottom,0px));box-shadow:none}
   .side.open{transform:none;box-shadow:0 0 0 100vmax rgba(0,0,0,.4)}
-  .side-close{display:inline-flex;position:absolute;top:calc(1rem + env(safe-area-inset-top,0px));right:.75rem;width:36px;padding:0;justify-content:center;font-size:18px;line-height:1}
+  .btn.side-close{display:inline-flex;position:absolute;top:calc(1rem + env(safe-area-inset-top,0px));right:.75rem;width:36px;padding:0;justify-content:center;font-size:18px;line-height:1}
   main{padding-top:1.5rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
